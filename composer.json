@@ -1,0 +1,26 @@
+{
+    "name": "semperton/storage",
+    "description": "SQLite JSON document storage library.",
+    "type": "library",
+    "license": "MIT",
+    "scripts": {
+		"test": "phpunit tests",
+        "check": "psalm --no-cache"
+	},
+    "require": {
+        "php": ">=7.4",
+        "ext-json": "*",
+        "semperton/database": "^0.2.0",
+        "semperton/query": "@dev",
+        "semperton/search": "@dev"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "vimeo/psalm": "^4.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Semperton\\Storage\\": "src/"
+        }
+    }
+}
