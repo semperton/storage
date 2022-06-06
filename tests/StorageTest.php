@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Semperton\Storage\PersistentStorage;
 use Semperton\Storage\MemoryStorage;
 use Semperton\Search\Criteria;
-use Semperton\Search\Filter;
+use Semperton\Storage\CollectionInterface;
 
 final class StorageTest extends TestCase
 {
@@ -24,11 +24,7 @@ final class StorageTest extends TestCase
 		$criteria = new Criteria();
 		$criteria->getFilter()->equal('_id', $id);
 
-		$data = $collection->findAll($criteria);
-
-		if (!is_array($data)) {
-			$data = iterator_to_array($data);
-		}
+		$data = $collection->find($criteria)->toArray();
 
 		$data = (array)$data[0];
 		$obj['_id'] = 1;
@@ -52,7 +48,7 @@ final class StorageTest extends TestCase
 
 		$id = $collection->insert((object)$obj);
 
-		$data = (array)$collection->find($id);
+		$data = (array)$collection->find(new Criteria($id))->first();
 		$obj['_id'] = 1;
 
 		$this->assertSame($obj, $data);
@@ -63,45 +59,87 @@ final class StorageTest extends TestCase
 		$this->assertFileDoesNotExist($filepath);
 	}
 
+	public function testCreate(): void
+	{
+		$storage = new MemoryStorage();
+		$valid = $storage->create('user')->valid();
+
+		$this->assertTrue($valid);
+
+		$exists = $storage->exists('user');
+
+		$this->assertTrue($exists);
+	}
+
+	public function testGet(): void
+	{
+		$storage = new MemoryStorage();
+
+		$user = $storage->get('user');
+
+		$this->assertInstanceOf(CollectionInterface::class, $user);
+
+		$this->assertFalse($user->valid());
+
+		$storage->create('user');
+
+		$user = $storage->get('user');
+
+		$this->assertTrue($user->valid());
+	}
+
 	public function testExists(): void
 	{
 		$storage = new MemoryStorage();
+
 		$this->assertFalse($storage->exists('misc'));
+
 		$storage->create('misc');
+
 		$this->assertTrue($storage->exists('misc'));
 	}
 
-	public function testRelations(): void
+	public function testDelete(): void
 	{
-		$this->markTestSkipped();
-
 		$storage = new MemoryStorage();
-		$posts = $storage->create('posts');
-		$comments = $storage->create('comments');
 
-		$postId = $posts->insert((object)[
-			'title' => 'The Storage News',
-			'number' => 22
-		]);
+		$user = $storage->create('user');
 
-		$comments->insertMany([
-			(object)[
-				'post_id' => $postId,
-				'title' => 'Good job',
-				'content' => ''
-			],
-			(object)[
-				'post_id' => $postId,
-				'title' => 'Nice read',
-				'content' => ''
-			]
-		]);
+		$this->assertTrue($user->valid());
 
+		$storage->delete('user');
 
-		$post = $posts->find($postId);
-		$cirteria = new Criteria();
-		$cirteria->getFilter()->equal('post_id', $postId);
-		$post->comments = $comments->findAll($cirteria)->toArray();
-		$this->assertSame((array)$post, []);
+		$this->assertFalse($user->valid());
+	}
+
+	public function testAttachStorage(): void
+	{
+		$filepath1 = __DIR__ . '/storage1.db';
+		$filepath2 = __DIR__ . '/storage2.db';
+
+		$storage1 = new PersistentStorage($filepath1);
+		$storage2 = new PersistentStorage($filepath2);
+
+		$data = [
+			'username' => 'John'
+		];
+
+		$id = $storage2->create('user')->insert($data);
+
+		$data['_id'] = $id;
+
+		$val = $storage2->get('user')->getValue($id, 'username');
+		$this->assertEquals('John', $val);
+
+		$attached = $storage1->attach($filepath2, 'delegate');
+
+		$this->assertTrue($attached);
+
+		$user = $storage1->get('user')->findOne($id);
+
+		$this->assertSame($data, (array)$user);
+
+		unlink($filepath1);
+		unlink($filepath2);
 	}
 }

@@ -5,20 +5,42 @@ declare(strict_types=1);
 namespace Semperton\Storage;
 
 use PDO;
-use Semperton\Database\Connection;
-use Semperton\Query\QueryFactory;
 
-final class PersistentStorage implements StorageInterface
+final class PersistentStorage extends Storage
 {
-	use StorageTrait;
-
 	public function __construct(string $filepath)
 	{
-		$this->connection = new Connection('sqlite:' . $filepath, null, null, [
-			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+		$this->dsn = 'sqlite:' . $filepath;
+		$this->options = [
 			PDO::ATTR_PERSISTENT => true // TODO: does this make sense?
-		]);
+		];
 
-		$this->queryFactory = new QueryFactory();
+		parent::__construct();
+	}
+
+	public function attach(string $filepath, string $alias): bool
+	{
+		$query = $this->queryFactory->raw('attach database :p1 as :p2');
+		$query->bind('p1', $filepath)->bind('p2', $this->queryFactory->quoteIdentifier($alias));
+
+		$sql = $query->compile($params);
+
+		/** @psalm-suppress PossiblyNullArgument */
+		$result = $this->connection->execute($sql, $params);
+
+		return $result;
+	}
+
+	public function detach(string $alias): bool
+	{
+		$query = $this->queryFactory->raw('detach database :p1');
+		$query->bind('p1', $this->queryFactory->quoteIdentifier($alias));
+
+		$sql = $query->compile($params);
+
+		/** @psalm-suppress PossiblyNullArgument */
+		$result = $this->connection->execute($sql, $params);
+
+		return $result;
 	}
 }

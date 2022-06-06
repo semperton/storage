@@ -4,21 +4,25 @@ declare(strict_types=1);
 
 namespace Semperton\Storage;
 
-use Generator;
-use InvalidArgumentException;
-use Iterator;
+use EmptyIterator;
 use Semperton\Database\ConnectionInterface;
+use Semperton\Database\ResultSetInterface;
 use Semperton\Query\QueryFactory;
-use Semperton\Search\Condition;
 use Semperton\Search\Criteria;
 use Semperton\Query\Expression\Filter as QueryFilter;
+use Semperton\Query\ExpressionInterface;
+use Semperton\Query\Type\SelectQuery;
 use Semperton\Search\Filter as SearchFilter;
-use Semperton\Search\Result;
 
 final class Collection implements CollectionInterface
 {
+	use TransformTrait;
+
 	/** @var string */
 	protected $name;
+
+	/** @var StorageInterface */
+	protected $storage;
 
 	/** @var ConnectionInterface */
 	protected $connection;
@@ -26,41 +30,29 @@ final class Collection implements CollectionInterface
 	/** @var QueryFactory */
 	protected $queryFactory;
 
-	public function __construct(string $name, ConnectionInterface $connection, QueryFactory $queryFactory)
-	{
+	public function __construct(
+		string $name,
+		StorageInterface $storage,
+		ConnectionInterface $connection,
+		QueryFactory $queryFactory
+	) {
 		$this->name = $name;
+		$this->storage = $storage;
 		$this->connection = $connection;
 		$this->queryFactory = $queryFactory;
 	}
 
-	protected function encode($data): string
-	{
-		return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-	}
-
-	protected function decode(string $data)
-	{
-		return json_decode($data, false, 512, JSON_THROW_ON_ERROR);
-	}
-
 	public function valid(): bool
 	{
-		$query = $this->queryFactory->select('sqlite_master');
-		$query->fields([$query->raw('1')])->where('type', '=', 'table')->where('name', '=', $this->name);
-
-		$sql = $query->compile($params);
-		$result = $this->connection->fetchValue($sql, $params);
-
-		return $result ? true : false;
+		return $this->storage->exists($this->name);
 	}
 
 	public function addIndex(string $field, bool $unique = false): bool
 	{
 		$indexName = $this->queryFactory->escapeString($field);
-
 		$tableName = $this->queryFactory->quoteIdentifier($this->name);
 
-		$path = '$.' . $this->queryFactory->escapeString($field);
+		$path = '$.' . $indexName;
 
 		$expr = "json_extract(data, '$path')";
 		// $sql = 'create' . ($unique ? ' unique' : '') . " index if not exists $indexName on $tableName($expr) where $expr";
@@ -78,7 +70,7 @@ final class Collection implements CollectionInterface
 		return $result;
 	}
 
-	public function insert(object $data): ?int
+	public function insert($data): int
 	{
 		$query = $this->queryFactory->insert($this->name);
 		$value = $query->func('json', $this->encode($data));
@@ -86,195 +78,222 @@ final class Collection implements CollectionInterface
 
 		$sql = $query->compile($params);
 
+		/** @psalm-suppress PossiblyNullArgument */
 		$result = $this->connection->execute($sql, $params);
 
-		return $result ? $this->connection->lastInsertId() : null;
+		return $result ? $this->connection->lastInsertId() : 0;
 	}
 
-	//TODO: use transactions
 	public function insertMany(array $data): array
 	{
 		$ids = [];
-
-		// $this->connection->execute('begin transaction');
 
 		foreach ($data as $obj) {
 			$ids[] = $this->insert($obj);
 		}
 
-		// $this->connection->execute('commit transaction');
-
 		return $ids;
 	}
 
-	public function update(int $id, object $data): bool
+	public function update(Criteria $criteria, $data): int
 	{
-		$searchFilter = new SearchFilter();
-		$searchFilter->equal('_id', $id);
-
-		return $this->updateAll($searchFilter, $data, 1) > 0;
-	}
-
-	public function updateAll(SearchFilter $searchFilter, object $data, int $limit = 0): int
-	{
-		$queryFilter = new QueryFilter($this->queryFactory);
-		$this->addQueryFilter($queryFilter, $searchFilter);
+		$queryFilter = $this->buildQueryFilter($criteria);
 
 		if (!$queryFilter->valid()) {
 			return 0;
 		}
 
 		$query = $this->queryFactory->update($this->name);
-		$value = $query->func('json_patch', $query->ident('data'), $query->func('json', $this->encode($data)));
+		$value = $query->func('json_patch', $query->ident('data'), $this->encode($data));
 
-		// TODO: implement limit
 		// SQLite support with ENABLE_UPDATE_DELETE_LIMIT
+		// $limit = $criteria->getLimit();
 		$query->set('data', $value)->where($queryFilter); // ->orderAsc('id')->limit($limit);
 
 		$sql = $query->compile($params);
 
+		/** @psalm-suppress PossiblyNullArgument */
 		$this->connection->execute($sql, $params);
 
 		return $this->connection->affectedRows();
 	}
 
-	public function delete(int $id): bool
+	public function updateOne(int $id, $data): bool
 	{
-		$searchFilter = new SearchFilter();
-		$searchFilter->equal('_id', $id);
+		$result = $this->update(new Criteria($id), $data);
 
-		return $this->deleteAll($searchFilter, 1) > 0;
+		return $result > 0;
 	}
 
-	public function deleteAll(SearchFilter $searchFilter, int $limit = 0): int
+	public function delete(Criteria $criteria): int
 	{
-		$queryFilter = new QueryFilter($this->queryFactory);
-		$this->addQueryFilter($queryFilter, $searchFilter);
+		$queryFilter = $this->buildQueryFilter($criteria);
 
 		if (!$queryFilter->valid()) {
 			return 0;
 		}
 
-		// TODO: implement limit
 		// SQLite support with ENABLE_UPDATE_DELETE_LIMIT
+		// $limit = $criteria->getLimit();
 		$query = $this->queryFactory->delete($this->name)->where($queryFilter); // ->orderAsc('id')->limit($limit);
 
 		$sql = $query->compile($params);
 
+		/** @psalm-suppress PossiblyNullArgument */
 		$this->connection->execute($sql, $params);
 
 		return $this->connection->affectedRows();
 	}
 
-	protected function prepareCompareValue($value): string
+	public function deleteOne(int $id): bool
 	{
-		if (is_string($value)) {
-			return "'" . $this->queryFactory->escapeString($value) . "'";
-		}
+		$result = $this->delete(new Criteria($id));
 
-		if (is_bool($value)) {
-			return (string)(int)$value;
-		}
-
-		if (is_array($value)) {
-			array_map([$this, 'prepareCompareValue'], $value);
-			return '(' . implode(', ', $value) . ')';
-		}
-
-		return (string)$value;
+		return $result > 0;
 	}
 
-	protected function addQueryFilter(QueryFilter $queryFilter, SearchFilter $searchFilter): void
+	public function find(Criteria $criteria): ObjectResult
 	{
-		foreach ($searchFilter as $connection => $entry) {
+		$result = $this->search($criteria);
 
-			$connect = $connection === $searchFilter::CONNECTION_AND ? 'and' : 'or';
-
-			if ($entry instanceof SearchFilter) {
-				$subFilter = new QueryFilter($this->queryFactory);
-				$this->addQueryFilter($subFilter, $entry);
-				// check if filter is valid
-				if ($subFilter->valid()) {
-					$queryFilter->$connect($subFilter);
-				}
-			} else if ($entry instanceof Condition) {
-
-				$field = $entry->getField();
-
-				// check for system field
-				// TODO: check if field is valid
-				if ($field[0] === '_') {
-
-					$field = substr($field, 1);
-					$queryFilter->$connect($field, $entry->getOperator(), $entry->getValue());
-				} else {
-
-					$expr = $this->queryFactory->func('json_extract', $this->queryFactory->ident('data'), "\$.$field");
-
-					// FIXME: prepared statement does not use correct data type, when comparing json_extract values
-					$value = $entry->getValue();
-					$rawValue = $this->prepareCompareValue($value);
-
-					$raw = $this->queryFactory->raw($rawValue);
-
-					$queryFilter->$connect($expr, $entry->getOperator(), $raw);
-				}
-			}
-		}
+		return new ObjectResult($criteria, $result ?? new EmptyIterator());
 	}
 
-	public function find(int $id): ?object
+	public function findRaw(Criteria $criteria): StringResult
 	{
-		$query = $this->queryFactory->select($this->name);
-		$field = $query->func('json_set', $query->ident('data'), '$._id', $query->ident('id'));
-		$query->fields([$field])->where('id', '=', $id)->limit(1);
+		$result = $this->search($criteria);
+
+		return new StringResult($criteria, $result ?? new EmptyIterator());
+	}
+
+	protected function search(Criteria $criteria): ?ResultSetInterface
+	{
+		$fields = $this->buildSearchFields($criteria);
+
+		$query = $this->buildSearchQuery($criteria)->from($this->name)->fields(['json' => $fields]);
 
 		$sql = $query->compile($params);
 
-		$result = $this->connection->fetchValue($sql, $params);
-
-		return $result ? $this->decode($result) : null;
+		/** @psalm-suppress PossiblyNullArgument */
+		return $this->connection->fetchResult($sql, $params);
 	}
 
-	public function findAll(Criteria $criteria): Result
+	public function findOne(int $id): ?object
+	{
+		/** @var null|object */
+		return $this->find(new Criteria($id))->first();
+	}
+
+	public function findRawOne(int $id): ?string
+	{
+		/** @var null|string */
+		return $this->findRaw(new Criteria($id))->first();
+	}
+
+	public function getValue(int $id, string $field)
 	{
 		$query = $this->queryFactory->select($this->name);
 
-		// fields
-		$fields = $criteria->getFields();
+		$path = '$.' . $field;
+		$col = $query->ident('data');
 
-		if ($fields) {
+		$value = $query->func('json_extract', $col, $path);
+		$type = $query->func('json_type', $col, $path);
 
-			$args = ['{}'];
-			foreach ($fields as $field) {
-				$args[] = $path = '$.' . $field;
-				$args[] = $query->func('json_extract', $query->ident('data'), $path);
-			}
+		$query->fields(['value' => $value, 'type' => $type])->where('id', '=', $id)->limit(1);
 
-			// add system fields
-			$args[] = '$._id';
-			$args[] = $query->ident('id');
+		$sql = $query->compile($params);
 
-			$field = $query->func('json_set', ...$args);
-		} else {
+		/** @psalm-suppress PossiblyNullArgument */
+		$result = $this->connection->fetchRow($sql, $params);
 
-			$field = $query->func('json_set', $query->ident('data'), '$._id', $query->ident('id'));
+		if ($result !== null) {
+			$result = $this->convertJsonValue((string)$result['value'], (string)$result['type']);
 		}
 
-		$query->fields(['json' => $field]);
+		return $result;
+	}
 
-		// limit, offset
-		$query->limit($criteria->getLimit())->offset($criteria->getOffset());
+	protected function buildSearchFields(Criteria $criteria): ExpressionInterface
+	{
+		$factory = $this->queryFactory;
 
-		// filters
-		$searchFilter = $criteria->getFilter();
+		$fields = $criteria->getFields();
+		$associations = $criteria->getAssociations();
+
+		$dataIdent = $factory->ident('data');
+
+		$args = !!$fields ? ['{}'] : [$dataIdent];
+
+		foreach ($fields as $field) {
+
+			$path = '$.' . $field;
+
+			$args[] = $path;
+			$args[] = $factory->func('json_extract', $dataIdent, $path);
+		}
+
+		// associations
+		// we auto join on {entity}_id = {entity}.id
+		if ($associations) {
+
+			$conn = $factory->func('json_extract', $dataIdent, '$.' . $this->name . '_id');
+			$idIdent = $factory->ident($this->name . '.id');
+
+			foreach ($associations as $coll => $crit) {
+
+				$subFields = $this->buildSearchFields($crit);
+				$subSelect = $this->buildSearchQuery($crit)
+					->from($coll)
+					->fields([$factory->func('json_group_array', $subFields)])
+					->where($conn, '=', $idIdent);
+
+				$args[] = '$.$' . $coll;
+				$args[] = $subSelect;
+			}
+		}
+
+		// system fields
+		$args[] = '$._id';
+		$args[] = $factory->ident('id');
+
+		$expr = $factory->func('json_set', ...$args);
+
+		return $expr;
+	}
+
+	protected function buildQueryFilter(Criteria $criteria): QueryFilter
+	{
 		$queryFilter = new QueryFilter($this->queryFactory);
-		$this->addQueryFilter($queryFilter, $searchFilter);
+
+		// $ids
+		$ids = $criteria->getIds();
+
+		if ($ids) {
+			$queryFilter->and('id', 'in', $ids);
+		} else {
+			$this->addSearchFilter($queryFilter, $criteria->getFilter());
+		}
+
+		return $queryFilter;
+	}
+
+	protected function buildSearchQuery(Criteria $criteria): SelectQuery
+	{
+		$factory = $this->queryFactory;
+		$query = new SelectQuery($factory);
+
+		$queryFilter = $this->buildQueryFilter($criteria);
 
 		// check if filter is valid
 		if ($queryFilter->valid()) {
 			$query->where($queryFilter);
 		}
+
+		// limit, offset
+		$limit = $criteria->getLimit();
+		$query->limit($limit > 0 ? $limit : count($criteria->getIds()));
+		$query->offset($criteria->getOffset());
 
 		// sorting
 		$sorting = $criteria->getSorting();
@@ -296,78 +315,73 @@ final class Collection implements CollectionInterface
 			}
 		}
 
-		$sql = $query->compile($params);
-		$result = $this->connection->fetchAll($sql, $params);
-
-		$rows = $this->decodeRows($result);
-
-		return new Result($criteria, $rows);
-	}
-
-	protected function decodeRows(?Iterator $result): Generator
-	{
-		if ($result) {
-			foreach ($result as $row) {
-				yield $this->decode($row['json']);
-			}
-		}
-	}
-
-	public function getValue(int $id, string $field)
-	{
-		$path = '$.' . $field;
-
-		$query = $this->queryFactory->select($this->name);
-
-		$value = $query->func('json_extract', $query->ident('data'), $path);
-		$type = $query->func('json_type', $query->ident('data'), $path);
-
-		$query->fields(['value' => $value, 'type' => $type])->where('id', '=', $id)->limit(1);
-
-		$sql = $query->compile($params);
-		$result = $this->connection->fetchRow($sql, $params);
-
-		if ($result !== null) {
-			$result = $this->convertJsonValue($result['value'], $result['type']);
-		}
-
-		return $result;
+		return $query;
 	}
 
 	/**
-	 * Converts a SQLite JSON1 extension type to the appropriate PHP value
-	 * https://www.sqlite.org/json1.html#the_json_type_function
-	 * @return mixed
+	 * @param null|scalar|array $value
 	 */
-	protected function convertJsonValue($value, string $type)
+	protected function prepareCompareValue($value): string
 	{
-		switch ($type) {
-			case 'null':
-				$value = null;
-				break;
-			case 'true':
-				$value = true;
-				break;
-			case 'false':
-				$value = false;
-				break;
-			case 'integer':
-				$value = (int)$value;
-				break;
-			case 'real':
-				$value = (float)$value;
-				break;
-			case 'text':
-				$value = (string)$value;
-				break;
-			case 'array':
-			case 'object':
-				$value = $this->decode($value);
-				break;
-			default:
-				throw new InvalidArgumentException("< $type > is not a valid JSON1 type");
+		if (is_string($value)) {
+			$escapeStr = $this->queryFactory->getEscapeString();
+			return $escapeStr . $this->queryFactory->escapeString($value) . $escapeStr;
 		}
 
-		return $value;
+		if (is_bool($value)) {
+			return (string)(int)$value;
+		}
+
+		if (is_array($value)) {
+			array_map([$this, 'prepareCompareValue'], $value);
+			/** @var string[] $value */
+			return '(' . implode(', ', $value) . ')';
+		}
+
+		return (string)$value;
+	}
+
+	protected function addSearchFilter(QueryFilter $queryFilter, SearchFilter $searchFilter): void
+	{
+		$factory = $this->queryFactory;
+
+		foreach ($searchFilter as $connection => $entry) {
+
+			$connect = $connection === $searchFilter::CONNECTION_AND ? 'and' : 'or';
+
+			if ($entry instanceof SearchFilter) {
+
+				$subFilter = new QueryFilter($factory);
+
+				$this->addSearchFilter($subFilter, $entry);
+
+				// check if filter is valid
+				if ($subFilter->valid()) {
+					$queryFilter->$connect($subFilter);
+				}
+
+				continue;
+			}
+
+			// condition
+
+			$field = $entry->getField();
+			$value = $entry->getValue();
+
+			// check for system field
+			// TODO: check if field is valid
+			if ($field !== '' && $field[0] === '_') {
+				$field = substr($field, 1);
+			} else {
+
+				$field = $factory->func('json_extract', $factory->ident('data'), "\$.$field");
+			}
+
+			// FIXME: prepared statement does not use correct data type, when comparing json_extract values
+			$rawValue = $this->prepareCompareValue($value);
+			$value = $factory->raw($rawValue);
+
+			$queryFilter->$connect($field, $entry->getOperator(), $value);
+		}
 	}
 }

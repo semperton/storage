@@ -5,14 +5,9 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Semperton\Storage\MemoryStorage;
 use Semperton\Search\Criteria;
-use Semperton\Search\Filter;
 
 final class CollectionTest extends TestCase
 {
-	protected function setUp(): void
-	{
-	}
-
 	public function testValid(): void
 	{
 		$storage = new MemoryStorage();
@@ -75,13 +70,13 @@ final class CollectionTest extends TestCase
 		$storage = new MemoryStorage();
 		$users = $storage->create('users');
 
-		$user = $users->find(1);
+		$user = $users->find(new Criteria(1))->first();
 
 		$this->assertNull($user);
 
 		$id = $users->insert((object)['name' => 'John']);
 
-		$user = $users->find($id);
+		$user = $users->find(new Criteria($id))->first();
 
 		$this->assertIsObject($user);
 		$this->assertEquals('John', $user->name);
@@ -106,14 +101,14 @@ final class CollectionTest extends TestCase
 		$criteria = new Criteria();
 		$criteria->getFilter()->like('name', 'John');
 
-		$users = $collection->findAll($criteria);
+		$users = $collection->find($criteria);
 
 		$this->assertIsObject($users->first());
 
 		$criteria2 = new Criteria();
 		$criteria2->getFilter()->lowerEqual('age', 22);
 
-		$users = $collection->findAll($criteria2);
+		$users = $collection->find($criteria2);
 
 		$this->assertEquals(2, $users->count());
 	}
@@ -131,15 +126,15 @@ final class CollectionTest extends TestCase
 		$age = $users->getValue($id, 'age');
 		$this->assertEquals(26, $age);
 
-		$status = $users->update($id, (object)['age' => 30]);
-		$this->assertTrue($status);
+		$status = $users->update(new Criteria($id), (object)['age' => 30]);
+		$this->assertEquals(1, $status);
 
 		$age = $users->getValue($id, 'age');
 		$this->assertEquals(30, $age);
 
-		$status = $users->update(2, (object)[]);
+		$status = $users->update(new Criteria($id), (object)[]);
 
-		$this->assertFalse($status);
+		$this->assertEquals(1, $status);
 	}
 
 	public function testUpdateAll(): void
@@ -155,10 +150,7 @@ final class CollectionTest extends TestCase
 
 		$this->assertEquals(22, $number);
 
-		// system field
-		$filter = (new Filter())->equal('_id', $id);
-
-		$collection->updateAll($filter, (object)[
+		$collection->update(new Criteria($id), (object)[
 			'number' => 33
 		]);
 
@@ -180,10 +172,10 @@ final class CollectionTest extends TestCase
 
 		$this->assertEquals(22, $number);
 
-		$status = $collection->delete($id);
-		$this->assertTrue($status);
+		$status = $collection->delete(new Criteria($id));
+		$this->assertEquals(1, $status);
 
-		$data = $collection->find($id);
+		$data = $collection->find(new Criteria($id))->first();
 
 		$this->assertNull($data);
 	}
@@ -201,10 +193,9 @@ final class CollectionTest extends TestCase
 
 		$this->assertEquals(22, $number);
 
-		$filter = (new Filter())->equal('_id', $id);
-		$collection->deleteAll($filter);
+		$collection->delete(new Criteria($id));
 
-		$data = $collection->find($id);
+		$data = $collection->find(new Criteria($id))->first();
 
 		$this->assertNull($data);
 	}
@@ -238,5 +229,91 @@ final class CollectionTest extends TestCase
 		]);
 
 		$this->assertNull($id2);
+	}
+
+	public function testAssociations(): void
+	{
+		$this->markTestSkipped();
+		// $this->doesNotPerformAssertions();
+
+		$storage = new MemoryStorage();
+		$posts = $storage->create('posts');
+		$comments = $storage->create('comments');
+
+		$posts->insertMany([
+			(object)[
+				'title' => 'The Storage News',
+				'number' => 22
+			],
+			(object)[
+				'title' => 'New Books Avail',
+				'number' => 55
+			]
+		]);
+
+		$comments->insertMany([
+			(object)[
+				'posts_id' => 1,
+				'title' => 'Good job',
+				'content' => ''
+			],
+			(object)[
+				'posts_id' => 1,
+				'title' => 'Nice read',
+				'content' => ''
+			]
+		]);
+
+		$criteria = new Criteria(1);
+		$criteria = $criteria->withField('title');
+
+		$criteria = $criteria->withAssociation('comments', (new Criteria())->withField('title'));
+
+		$data = $posts->find($criteria)->toArray();
+
+		// var_dump($data);
+	}
+
+	public function testRaw(): void
+	{
+		$this->markTestSkipped();
+
+		$storage = new MemoryStorage();
+		$posts = $storage->create('posts');
+
+		$id = $posts->insert([
+			'title' => 'New Post',
+			'views' => 22
+		]);
+
+		$rawSingle = $posts->findRawOne($id);
+
+		$rawAll = $posts->findRaw(new Criteria($id));
+
+		foreach ($rawAll as $entry) {
+			var_dump($entry);
+		}
+
+		$first = $rawAll->first();
+
+		var_dump($first);
+	}
+
+	public function testDataTypes(): void
+	{
+		$storage = new MemoryStorage();
+		$posts = $storage->create('posts');
+
+		$posts->insert([
+			'title' => 'New Post',
+			'views' => 22
+		]);
+
+		$criteria = new Criteria();
+		$criteria->getFilter()->equal('views', 22);
+
+		$post = $posts->find($criteria)->first();
+
+		var_dump($post);
 	}
 }
