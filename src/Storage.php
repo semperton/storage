@@ -67,4 +67,45 @@ abstract class Storage implements StorageInterface
 		/** @psalm-suppress PossiblyNullArgument */
 		return $this->connection->execute($sql, $params);
 	}
+
+	public function collections(): array
+	{
+		$query = $this->queryFactory->select('sqlite_master');
+		$query->fields(['name'])->where('type', '=', 'table');
+
+		$sql = $query->compile($params);
+
+		/** @psalm-suppress PossiblyNullArgument */
+		$result = $this->connection->fetchResult($sql, $params)->toArray();
+
+		/** @var string[] */
+		return array_column($result, 'name');
+	}
+
+	public function indexes(?string $collection = null): array
+	{
+		$query = $this->queryFactory->select('sqlite_master');
+		$unique = $this->queryFactory->quoteIdentifier('unique');
+		$query->fields([
+			'name',
+			'collection' => 'tbl_name',
+			$unique => $query->raw("substr(sql, 1, 13) = 'CREATE UNIQUE'")
+		])->where('type', '=', 'index');
+
+		if ($collection !== null) {
+			$query->where('tbl_name', '=', $collection);
+		}
+
+		$sql = $query->compile($params);
+
+		/** @psalm-suppress PossiblyNullArgument */
+		$result = $this->connection->fetchResult($sql, $params)->toArray();
+
+		foreach ($result as &$entry) {
+			$entry['unique'] = (bool)$entry['unique'];
+		}
+
+		/** @var array{name: string, collection: string, unique: bool}[] */
+		return $result;
+	}
 }

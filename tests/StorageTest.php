@@ -22,7 +22,7 @@ final class StorageTest extends TestCase
 		$id = $collection->insert((object)$obj);
 
 		$criteria = new Criteria();
-		$criteria->getFilter()->equal('_id', $id);
+		$criteria->getFilter()->equals('_id', $id);
 
 		$data = $collection->find($criteria)->toArray();
 
@@ -141,5 +141,41 @@ final class StorageTest extends TestCase
 
 		unlink($filepath1);
 		unlink($filepath2);
+	}
+
+	public function testCollections(): void
+	{
+		$storage = new MemoryStorage();
+		$storage->create('user');
+		$storage->create('post');
+
+		$collections = $storage->collections();
+
+		$this->assertSame(['user', 'post'], $collections);
+	}
+
+	public function testIndexes(): void
+	{
+		$storage = new MemoryStorage();
+		$users = $storage->create('user');
+		$users->addIndex('username464648', true);
+		$users->addIndex('testIndex');
+
+		$indexes = $storage->indexes('user');
+
+		$expected = [
+			[
+				'name' => 'username464648',
+				'collection' => 'user',
+				'unique' => true
+			],
+			[
+				'name' => 'testIndex',
+				'collection' => 'user',
+				'unique' => false
+			]
+		];
+
+		$this->assertSame($expected, $indexes);
 	}
 }

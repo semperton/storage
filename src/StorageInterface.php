@@ -13,4 +13,14 @@ interface StorageInterface
 	public function delete(string $collection): bool;
 
 	public function get(string $collection): CollectionInterface;
+
+	/**
+	 * @return string[]
+	 */
+	public function collections(): array;
+
+	/**
+	 * @return array{name: string, collection: string, unique: bool}[]
+	 */
+	public function indexes(?string $collection = null): array;
 }

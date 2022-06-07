@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Semperton\Storage;
 
-use EmptyIterator;
 use Semperton\Database\ConnectionInterface;
 use Semperton\Database\ResultSetInterface;
 use Semperton\Query\QueryFactory;
@@ -68,6 +67,11 @@ final class Collection implements CollectionInterface
 		$indexName = $this->queryFactory->escapeString($field);
 		$result = $this->connection->execute("drop index if exists '$indexName'");
 		return $result;
+	}
+
+	public function indexes(): array
+	{
+		return $this->storage->indexes($this->name);
 	}
 
 	public function insert($data): int
@@ -156,17 +160,17 @@ final class Collection implements CollectionInterface
 	{
 		$result = $this->search($criteria);
 
-		return new ObjectResult($criteria, $result ?? new EmptyIterator());
+		return new ObjectResult($criteria, $result);
 	}
 
 	public function findRaw(Criteria $criteria): StringResult
 	{
 		$result = $this->search($criteria);
 
-		return new StringResult($criteria, $result ?? new EmptyIterator());
+		return new StringResult($criteria, $result);
 	}
 
-	protected function search(Criteria $criteria): ?ResultSetInterface
+	protected function search(Criteria $criteria): ResultSetInterface
 	{
 		$fields = $this->buildSearchFields($criteria);
 
@@ -184,7 +188,7 @@ final class Collection implements CollectionInterface
 		return $this->find(new Criteria($id))->first();
 	}
 
-	public function findRawOne(int $id): ?string
+	public function findOneRaw(int $id): ?string
 	{
 		/** @var null|string */
 		return $this->findRaw(new Criteria($id))->first();
@@ -377,7 +381,8 @@ final class Collection implements CollectionInterface
 				$field = $factory->func('json_extract', $factory->ident('data'), "\$.$field");
 			}
 
-			// FIXME: prepared statement does not use correct data type, when comparing json_extract values
+			// prepared statement does not use correct data type
+			// when comparing json_extract values - so we do it manually
 			$rawValue = $this->prepareCompareValue($value);
 			$value = $factory->raw($rawValue);
 

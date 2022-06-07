@@ -286,7 +286,7 @@ final class CollectionTest extends TestCase
 			'views' => 22
 		]);
 
-		$rawSingle = $posts->findRawOne($id);
+		$rawSingle = $posts->findOneRaw($id);
 
 		$rawAll = $posts->findRaw(new Criteria($id));
 
@@ -304,16 +304,48 @@ final class CollectionTest extends TestCase
 		$storage = new MemoryStorage();
 		$posts = $storage->create('posts');
 
-		$posts->insert([
+		$data = [
 			'title' => 'New Post',
 			'views' => 22
-		]);
+		];
+
+		$id = $posts->insert($data);
+		$data['_id'] = $id;
 
 		$criteria = new Criteria();
-		$criteria->getFilter()->equal('views', 22);
+		$criteria->getFilter()->equals('views', 22);
 
 		$post = $posts->find($criteria)->first();
 
-		var_dump($post);
+		$this->assertSame($data, (array)$post);
+	}
+
+	public function testNullValue(): void
+	{
+		$storage = new MemoryStorage();
+		$posts = $storage->create('user');
+
+		$data = [
+			'name' => 'John',
+			'age' => null
+		];
+
+		$id = $posts->insert($data);
+		$data['_id'] = $id;
+
+		$criteria = new Criteria();
+		$criteria->getFilter()->isNull('age');
+
+		$result = $posts->find($criteria)->first();
+
+		$this->assertSame($data, (array)$result);
+
+		$posts->updateOne($id, ['age' => 22]);
+		$data['age'] = 22;
+
+		$criteria->getFilter()->reset()->notNull('age');
+		$user = $posts->find($criteria)->first();
+
+		$this->assertSame($data, (array)$user);
 	}
 }

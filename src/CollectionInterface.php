@@ -28,7 +28,7 @@ interface CollectionInterface
 
 	public function findOne(int $id): ?object;
 
-	public function findRawOne(int $id): ?string;
+	public function findOneRaw(int $id): ?string;
 
 	/**
 	 * @return null|mixed
@@ -49,7 +49,9 @@ interface CollectionInterface
 
 	public function deleteOne(int $id): bool;
 
-	public function addIndex(string $field, bool $unique): bool;
+	public function addIndex(string $field, bool $unique = false): bool;
 
 	public function removeIndex(string $field): bool;
+
+	public function indexes(): array;
 }
