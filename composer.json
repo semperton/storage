@@ -14,7 +14,7 @@
         "ext-pdo_sqlite": "*",
         "semperton/query": "@dev",
         "semperton/search": "@dev",
-        "semperton/database": "^1.0"
+        "semperton/database": "@dev"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",

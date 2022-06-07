@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1ae0bfe9d3c3a6a3e492a5c5d42fc833",
+    "content-hash": "36b4b502ce9ca1cbc063fa7c0438a307",
     "packages": [
         {
             "name": "semperton/database",
-            "version": "1.0.0",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/semperton/database.git",
-                "reference": "19c9ae8854bde0d1d83fb4e4ccee86f9ac205bd9"
+                "reference": "6f4a1ccdfb863ae0859dc732a1b0cf921c88e140"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/semperton/database/zipball/19c9ae8854bde0d1d83fb4e4ccee86f9ac205bd9",
-                "reference": "19c9ae8854bde0d1d83fb4e4ccee86f9ac205bd9",
+                "url": "https://api.github.com/repos/semperton/database/zipball/6f4a1ccdfb863ae0859dc732a1b0cf921c88e140",
+                "reference": "6f4a1ccdfb863ae0859dc732a1b0cf921c88e140",
                 "shasum": ""
             },
             "require": {
@@ -29,6 +29,7 @@
                 "phpunit/phpunit": "^9.5",
                 "vimeo/psalm": "^4.8"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -42,9 +43,9 @@
             "description": "A compact PDO wrapper library.",
             "support": {
                 "issues": "https://github.com/semperton/database/issues",
-                "source": "https://github.com/semperton/database/tree/1.0.0"
+                "source": "https://github.com/semperton/database/tree/main"
             },
-            "time": "2022-05-27T22:14:11+00:00"
+            "time": "2022-06-07T15:07:10+00:00"
         },
         {
             "name": "semperton/query",
@@ -92,12 +93,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/semperton/search.git",
-                "reference": "3fbdb7bc30b28b2c0b649462e72ef0b123a32c6a"
+                "reference": "7ef8143be776c8148811ff34ced22713d115b01b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/semperton/search/zipball/3fbdb7bc30b28b2c0b649462e72ef0b123a32c6a",
-                "reference": "3fbdb7bc30b28b2c0b649462e72ef0b123a32c6a",
+                "url": "https://api.github.com/repos/semperton/search/zipball/7ef8143be776c8148811ff34ced22713d115b01b",
+                "reference": "7ef8143be776c8148811ff34ced22713d115b01b",
                 "shasum": ""
             },
             "require": {
@@ -129,7 +130,7 @@
                 "issues": "https://github.com/semperton/search/issues",
                 "source": "https://github.com/semperton/search/tree/main"
             },
-            "time": "2022-06-06T16:39:34+00:00"
+            "time": "2022-06-07T14:11:04+00:00"
         }
     ],
     "packages-dev": [
@@ -3789,7 +3790,8 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "semperton/query": 20,
-        "semperton/search": 20
+        "semperton/search": 20,
+        "semperton/database": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
