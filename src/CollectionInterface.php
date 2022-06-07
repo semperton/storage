@@ -49,7 +49,7 @@ interface CollectionInterface
 
 	public function deleteOne(int $id): bool;
 
-	public function addIndex(string $field, bool $unique = false): bool;
+	public function createIndex(string $field, bool $unique = false): bool;
 
 	public function removeIndex(string $field): bool;
 

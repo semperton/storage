@@ -209,7 +209,7 @@ final class CollectionTest extends TestCase
 		$storage = new MemoryStorage();
 		$collection = $storage->create('users');
 
-		$res = $collection->addIndex('user.name', true);
+		$res = $collection->createIndex('user.name', true);
 
 		$this->assertTrue($res);
 

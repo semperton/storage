@@ -46,7 +46,7 @@ final class Collection implements CollectionInterface
 		return $this->storage->exists($this->name);
 	}
 
-	public function addIndex(string $field, bool $unique = false): bool
+	public function createIndex(string $field, bool $unique = false): bool
 	{
 		$indexName = $this->queryFactory->escapeString($field);
 		$tableName = $this->queryFactory->quoteIdentifier($this->name);
@@ -66,6 +66,7 @@ final class Collection implements CollectionInterface
 	{
 		$indexName = $this->queryFactory->escapeString($field);
 		$result = $this->connection->execute("drop index if exists '$indexName'");
+		
 		return $result;
 	}
 

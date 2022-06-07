@@ -158,8 +158,8 @@ final class StorageTest extends TestCase
 	{
 		$storage = new MemoryStorage();
 		$users = $storage->create('user');
-		$users->addIndex('username464648', true);
-		$users->addIndex('testIndex');
+		$users->createIndex('username464648', true);
+		$users->createIndex('testIndex');
 
 		$indexes = $storage->indexes('user');
 
