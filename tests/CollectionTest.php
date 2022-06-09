@@ -306,7 +306,8 @@ final class CollectionTest extends TestCase
 
 		$data = [
 			'title' => 'New Post',
-			'views' => 22
+			'views' => 22,
+			'rating' => 1.7
 		];
 
 		$id = $posts->insert($data);
@@ -314,6 +315,12 @@ final class CollectionTest extends TestCase
 
 		$criteria = new Criteria();
 		$criteria->getFilter()->equals('views', 22);
+
+		$post = $posts->find($criteria)->first();
+
+		$this->assertSame($data, (array)$post);
+
+		$criteria->getFilter()->reset()->greaterEqual('rating', 1.7);
 
 		$post = $posts->find($criteria)->first();
 
