@@ -12,20 +12,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/semperton/database.git",
-                "reference": "6f4a1ccdfb863ae0859dc732a1b0cf921c88e140"
+                "reference": "b2ab574c8a573530ae8208d93a51ffb827b3cf28"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/semperton/database/zipball/6f4a1ccdfb863ae0859dc732a1b0cf921c88e140",
-                "reference": "6f4a1ccdfb863ae0859dc732a1b0cf921c88e140",
+                "url": "https://api.github.com/repos/semperton/database/zipball/b2ab574c8a573530ae8208d93a51ffb827b3cf28",
+                "reference": "b2ab574c8a573530ae8208d93a51ffb827b3cf28",
                 "shasum": ""
             },
             "require": {
-                "ext-pdo": "*",
                 "php": ">=7.2.0"
             },
             "require-dev": {
+                "ext-pdo": "*",
                 "ext-pdo_sqlite": "*",
+                "ext-sqlite3": "*",
                 "phpunit/phpunit": "^9.5",
                 "vimeo/psalm": "^4.8"
             },
@@ -45,7 +46,7 @@
                 "issues": "https://github.com/semperton/database/issues",
                 "source": "https://github.com/semperton/database/tree/main"
             },
-            "time": "2022-06-07T15:07:10+00:00"
+            "time": "2022-06-09T15:25:35+00:00"
         },
         {
             "name": "semperton/query",
@@ -53,12 +54,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/semperton/query.git",
-                "reference": "d6ceca739ba84b63ea40f74d1f54f0d6ea58bd7a"
+                "reference": "b72eefe722974fcfc2034e67adac9fc44da7f237"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/semperton/query/zipball/d6ceca739ba84b63ea40f74d1f54f0d6ea58bd7a",
-                "reference": "d6ceca739ba84b63ea40f74d1f54f0d6ea58bd7a",
+                "url": "https://api.github.com/repos/semperton/query/zipball/b72eefe722974fcfc2034e67adac9fc44da7f237",
+                "reference": "b72eefe722974fcfc2034e67adac9fc44da7f237",
                 "shasum": ""
             },
             "require": {
@@ -85,7 +86,7 @@
                 "issues": "https://github.com/semperton/query/issues",
                 "source": "https://github.com/semperton/query/tree/main"
             },
-            "time": "2022-06-01T15:00:34+00:00"
+            "time": "2022-06-08T09:25:59+00:00"
         },
         {
             "name": "semperton/search",
@@ -93,12 +94,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/semperton/search.git",
-                "reference": "7ef8143be776c8148811ff34ced22713d115b01b"
+                "reference": "2429bcb85285121875b427b8e00a35d8be125bfa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/semperton/search/zipball/7ef8143be776c8148811ff34ced22713d115b01b",
-                "reference": "7ef8143be776c8148811ff34ced22713d115b01b",
+                "url": "https://api.github.com/repos/semperton/search/zipball/2429bcb85285121875b427b8e00a35d8be125bfa",
+                "reference": "2429bcb85285121875b427b8e00a35d8be125bfa",
                 "shasum": ""
             },
             "require": {
@@ -130,7 +131,7 @@
                 "issues": "https://github.com/semperton/search/issues",
                 "source": "https://github.com/semperton/search/tree/main"
             },
-            "time": "2022-06-07T14:11:04+00:00"
+            "time": "2022-06-08T09:27:17+00:00"
         }
     ],
     "packages-dev": [
