@@ -222,6 +222,8 @@ final class Collection implements CollectionInterface
 		$result = $this->connection->fetchRow($sql, $params);
 
 		if ($result !== null) {
+
+			/** @var mixed */
 			$result = $this->convertJsonValue((string)$result['value'], (string)$result['type']);
 		}
 
