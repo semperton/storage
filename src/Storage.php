@@ -6,15 +6,13 @@ namespace Semperton\Storage;
 
 use Semperton\Database\Connection;
 use Semperton\Database\ConnectionInterface;
+use Semperton\Database\SQLiteConnection;
 use Semperton\Query\QueryFactory;
 
 abstract class Storage implements StorageInterface
 {
 	/** @var string */
-	protected $dsn = '';
-
-	/** @var array */
-	protected $options = [];
+	protected $filepath = ':memory:';
 
 	/** @var ConnectionInterface */
 	protected $connection;
@@ -24,7 +22,7 @@ abstract class Storage implements StorageInterface
 
 	public function __construct()
 	{
-		$this->connection = new Connection($this->dsn, null, null, $this->options);
+		$this->connection = new SQLiteConnection($this->filepath);
 		$this->queryFactory = new QueryFactory();
 	}
 

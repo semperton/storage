@@ -203,8 +203,7 @@ final class CollectionTest extends TestCase
 	public function testIndex(): void
 	{
 		// UNIQUE constraint
-		$this->expectException(PDOException::class);
-		$this->expectExceptionCode(23000);
+		$this->expectException(Exception::class);
 
 		$storage = new MemoryStorage();
 		$collection = $storage->create('users');

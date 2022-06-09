@@ -4,17 +4,11 @@ declare(strict_types=1);
 
 namespace Semperton\Storage;
 
-use PDO;
-
 final class PersistentStorage extends Storage
 {
 	public function __construct(string $filepath)
 	{
-		$this->dsn = 'sqlite:' . $filepath;
-		$this->options = [
-			PDO::ATTR_PERSISTENT => true // TODO: does this make sense?
-		];
-
+		$this->filepath = $filepath;
 		parent::__construct();
 	}
 
