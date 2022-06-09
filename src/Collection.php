@@ -332,29 +332,6 @@ final class Collection implements CollectionInterface
 		return $query;
 	}
 
-	/**
-	 * @param null|scalar|array $value
-	 */
-	protected function prepareCompareValue($value): string
-	{
-		if (is_string($value)) {
-			$escapeStr = $this->queryFactory->getEscapeString();
-			return $escapeStr . $this->queryFactory->escapeString($value) . $escapeStr;
-		}
-
-		if (is_bool($value)) {
-			return (string)(int)$value;
-		}
-
-		if (is_array($value)) {
-			array_map([$this, 'prepareCompareValue'], $value);
-			/** @var string[] $value */
-			return '(' . implode(', ', $value) . ')';
-		}
-
-		return (string)$value;
-	}
-
 	protected function addSearchFilter(QueryFilter $queryFilter, SearchFilter $searchFilter): void
 	{
 		$factory = $this->queryFactory;
@@ -378,9 +355,7 @@ final class Collection implements CollectionInterface
 			}
 
 			// condition
-
 			$field = $entry->getField();
-			$value = $entry->getValue();
 
 			// check for system field
 			// TODO: check if field is valid
@@ -391,12 +366,7 @@ final class Collection implements CollectionInterface
 				$field = $factory->func('json_extract', $factory->ident('data'), "\$.$field");
 			}
 
-			// prepared statement does not use correct data type
-			// when comparing json_extract values - so we do it manually
-			$rawValue = $this->prepareCompareValue($value);
-			$value = $factory->raw($rawValue);
-
-			$queryFilter->$connect($field, $entry->getOperator(), $value);
+			$queryFilter->$connect($field, $entry->getOperator(), $entry->getValue());
 		}
 	}
 }
