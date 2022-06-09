@@ -43,7 +43,6 @@ abstract class Storage implements StorageInterface
 
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		$result = (int)$this->connection->fetchValue($sql, $params);
 
 		return (bool)$result;
@@ -64,7 +63,6 @@ abstract class Storage implements StorageInterface
 		$query = $this->queryFactory->drop($collection)->exists();
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		return $this->connection->execute($sql, $params);
 	}
 
@@ -75,7 +73,6 @@ abstract class Storage implements StorageInterface
 
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		$result = $this->connection->fetchResult($sql, $params)->toArray();
 
 		/** @var string[] */
@@ -98,7 +95,6 @@ abstract class Storage implements StorageInterface
 
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		$result = $this->connection->fetchResult($sql, $params)->toArray();
 
 		foreach ($result as &$entry) {

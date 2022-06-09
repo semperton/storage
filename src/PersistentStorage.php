@@ -25,7 +25,6 @@ final class PersistentStorage extends Storage
 
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		$result = $this->connection->execute($sql, $params);
 
 		return $result;
@@ -38,7 +37,6 @@ final class PersistentStorage extends Storage
 
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		$result = $this->connection->execute($sql, $params);
 
 		return $result;
