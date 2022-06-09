@@ -66,7 +66,7 @@ final class Collection implements CollectionInterface
 	{
 		$indexName = $this->queryFactory->escapeString($field);
 		$result = $this->connection->execute("drop index if exists '$indexName'");
-		
+
 		return $result;
 	}
 
@@ -83,19 +83,32 @@ final class Collection implements CollectionInterface
 
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		$result = $this->connection->execute($sql, $params);
 
 		return $result ? $this->connection->lastInsertId() : 0;
 	}
 
-	public function insertMany(array $data): array
+	public function insertMany(iterable $data): array
 	{
+		$query = $this->queryFactory->insert($this->name);
+		$query->values(['data' => $query->raw('json(:data)')]);
+
+		$sql = $query->compile();
 		$ids = [];
 
+		$this->connection->beginTransaction();
+
 		foreach ($data as $obj) {
-			$ids[] = $this->insert($obj);
+
+			$json = $this->encode($obj);
+			$result = $this->connection->execute($sql, ['data' => $json]);
+
+			if ($result) {
+				$ids[] = $this->connection->lastInsertId();
+			}
 		}
+
+		$this->connection->commit();
 
 		return $ids;
 	}
@@ -117,7 +130,6 @@ final class Collection implements CollectionInterface
 
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		$this->connection->execute($sql, $params);
 
 		return $this->connection->affectedRows();
@@ -144,7 +156,6 @@ final class Collection implements CollectionInterface
 
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		$this->connection->execute($sql, $params);
 
 		return $this->connection->affectedRows();
@@ -179,7 +190,6 @@ final class Collection implements CollectionInterface
 
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		return $this->connection->fetchResult($sql, $params);
 	}
 
@@ -209,7 +219,6 @@ final class Collection implements CollectionInterface
 
 		$sql = $query->compile($params);
 
-		/** @psalm-suppress PossiblyNullArgument */
 		$result = $this->connection->fetchRow($sql, $params);
 
 		if ($result !== null) {
