@@ -6,21 +6,22 @@ namespace Semperton\Storage;
 
 use JsonSerializable;
 use Semperton\Search\Criteria;
+use stdClass;
 
 interface CollectionInterface
 {
 	public function valid(): bool;
 
 	/**
-	 * @param array|object|JsonSerializable $data
+	 * @param array<string, mixed>|stdClass|JsonSerializable $data
 	 */
 	public function insert($data): int;
 
 	/**
-	 * @param (array|object|JsonSerializable)[] $data
+	 * @param iterable<array-key, array<string, mixed>|stdClass|JsonSerializable> $data
 	 * @return int[]
 	 */
-	public function insertMany(array $data): array;
+	public function insertMany(iterable $data): array;
 
 	public function find(Criteria $criteria): ObjectResult;
 
@@ -36,12 +37,12 @@ interface CollectionInterface
 	public function getValue(int $id, string $field);
 
 	/**
-	 * @param array|object|JsonSerializable $data
+	 * @param array<string, mixed>|stdClass|JsonSerializable $data
 	 */
 	public function update(Criteria $criteria, $data): int;
 
 	/**
-	 * @param array|object|JsonSerializable $data
+	 * @param array<string, mixed>|stdClass|JsonSerializable $data
 	 */
 	public function updateOne(int $id, $data): bool;
 
@@ -53,5 +54,8 @@ interface CollectionInterface
 
 	public function removeIndex(string $field): bool;
 
+	/**
+	 * @return array{name: string, collection: string, unique: bool}[]
+	 */
 	public function indexes(): array;
 }
