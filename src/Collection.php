@@ -205,7 +205,7 @@ final class Collection implements CollectionInterface
 		return $this->findRaw(new Criteria($id))->first();
 	}
 
-	public function getValue(int $id, string $field)
+	public function extract(int $id, string $field)
 	{
 		$query = $this->queryFactory->select($this->name);
 
@@ -223,7 +223,6 @@ final class Collection implements CollectionInterface
 
 		if ($result !== null) {
 
-			/** @var mixed */
 			$result = $this->convertJsonValue((string)$result['value'], (string)$result['type']);
 		}
 

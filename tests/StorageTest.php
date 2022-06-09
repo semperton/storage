@@ -128,7 +128,7 @@ final class StorageTest extends TestCase
 
 		$data['_id'] = $id;
 
-		$val = $storage2->get('user')->getValue($id, 'username');
+		$val = $storage2->get('user')->extract($id, 'username');
 		$this->assertEquals('John', $val);
 
 		$attached = $storage1->attach($filepath2, 'delegate');

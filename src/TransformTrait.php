@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Semperton\Storage;
 
 use InvalidArgumentException;
+use stdClass;
 
 trait TransformTrait
 {
@@ -35,7 +36,7 @@ trait TransformTrait
 	/**
 	 * Converts a SQLite JSON1 extension type to the appropriate PHP value
 	 * https://www.sqlite.org/json1.html#the_json_type_function
-	 * @return null|mixed
+	 * @return null|scalar|array|stdClass
 	 */
 	protected function convertJsonValue(string $value, string $type)
 	{
@@ -60,7 +61,7 @@ trait TransformTrait
 				break;
 			case 'array':
 			case 'object':
-				/** @var array|object */
+				/** @var array|stdClass */
 				$value = $this->decode($value);
 				break;
 			default:

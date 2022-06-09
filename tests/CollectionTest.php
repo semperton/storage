@@ -31,7 +31,7 @@ final class CollectionTest extends TestCase
 
 		$this->assertEquals(1, $id);
 
-		$name = $users->getValue(1, 'name');
+		$name = $users->extract(1, 'name');
 		$this->assertEquals('John', $name);
 	}
 
@@ -48,7 +48,7 @@ final class CollectionTest extends TestCase
 
 		$this->assertSame([1, 2, 3], $ids);
 
-		$name = $users->getValue(2, 'name');
+		$name = $users->extract(2, 'name');
 		$this->assertEquals('Jane', $name);
 	}
 
@@ -57,11 +57,11 @@ final class CollectionTest extends TestCase
 		$storage = new MemoryStorage();
 		$users = $storage->create('users');
 
-		$this->assertNull($users->getValue(1, 'name'));
+		$this->assertNull($users->extract(1, 'name'));
 
 		$id = $users->insert((object)['name' => 'Kate']);
 
-		$name = $users->getValue($id, 'name');
+		$name = $users->extract($id, 'name');
 		$this->assertEquals('Kate', $name);
 	}
 
@@ -123,13 +123,13 @@ final class CollectionTest extends TestCase
 			'age' => 26
 		]);
 
-		$age = $users->getValue($id, 'age');
+		$age = $users->extract($id, 'age');
 		$this->assertEquals(26, $age);
 
 		$status = $users->update(new Criteria($id), (object)['age' => 30]);
 		$this->assertEquals(1, $status);
 
-		$age = $users->getValue($id, 'age');
+		$age = $users->extract($id, 'age');
 		$this->assertEquals(30, $age);
 
 		$status = $users->update(new Criteria($id), (object)[]);
@@ -146,7 +146,7 @@ final class CollectionTest extends TestCase
 			'number' => 22
 		]);
 
-		$number = $collection->getValue($id, 'number');
+		$number = $collection->extract($id, 'number');
 
 		$this->assertEquals(22, $number);
 
@@ -154,7 +154,7 @@ final class CollectionTest extends TestCase
 			'number' => 33
 		]);
 
-		$number = $collection->getValue($id, 'number');
+		$number = $collection->extract($id, 'number');
 
 		$this->assertEquals(33, $number);
 	}
@@ -168,7 +168,7 @@ final class CollectionTest extends TestCase
 			'number' => 22
 		]);
 
-		$number = $collection->getValue($id, 'number');
+		$number = $collection->extract($id, 'number');
 
 		$this->assertEquals(22, $number);
 
@@ -189,7 +189,7 @@ final class CollectionTest extends TestCase
 			'number' => 22
 		]);
 
-		$number = $collection->getValue($id, 'number');
+		$number = $collection->extract($id, 'number');
 
 		$this->assertEquals(22, $number);
 
@@ -313,9 +313,9 @@ final class CollectionTest extends TestCase
 		$id = $posts->insert($data);
 		$data['_id'] = $id;
 
-		$this->assertIsFloat($posts->getValue($id, 'rating'));
-		$this->assertIsBool($posts->getValue($id, 'new'));
-		$this->assertIsInt($posts->getValue($id, 'views'));
+		$this->assertIsFloat($posts->extract($id, 'rating'));
+		$this->assertIsBool($posts->extract($id, 'new'));
+		$this->assertIsInt($posts->extract($id, 'views'));
 
 		$criteria = new Criteria();
 		$criteria->getFilter()->equals('views', 22);

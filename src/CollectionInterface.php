@@ -32,9 +32,9 @@ interface CollectionInterface
 	public function findOneRaw(int $id): ?string;
 
 	/**
-	 * @return null|mixed
+	 * @return null|scalar|array|stdClass
 	 */
-	public function getValue(int $id, string $field);
+	public function extract(int $id, string $field);
 
 	/**
 	 * @param array<string, mixed>|stdClass|JsonSerializable $data
