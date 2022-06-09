@@ -306,11 +306,16 @@ final class CollectionTest extends TestCase
 		$data = [
 			'title' => 'New Post',
 			'views' => 22,
-			'rating' => 1.7
+			'rating' => 1.7,
+			'new' => true,
 		];
 
 		$id = $posts->insert($data);
 		$data['_id'] = $id;
+
+		$this->assertIsFloat($posts->getValue($id, 'rating'));
+		$this->assertIsBool($posts->getValue($id, 'new'));
+		$this->assertIsInt($posts->getValue($id, 'views'));
 
 		$criteria = new Criteria();
 		$criteria->getFilter()->equals('views', 22);
