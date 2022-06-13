@@ -10,8 +10,7 @@
     "require": {
         "php": ">=7.4",
         "ext-json": "*",
-        "ext-pdo": "*",
-        "ext-pdo_sqlite": "*",
+        "ext-sqlite3": "*",
         "semperton/query": "@dev",
         "semperton/search": "@dev",
         "semperton/database": "@dev"

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "36b4b502ce9ca1cbc063fa7c0438a307",
+    "content-hash": "a9cd9c9aeabd2d180b980aa6461b3c85",
     "packages": [
         {
             "name": "semperton/database",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/semperton/database.git",
-                "reference": "45995cb936fa325bbccc89da7eab775dd2af6654"
+                "reference": "aaab1d5f5bbedc0c59963d1d0aa99be4b7476c48"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/semperton/database/zipball/45995cb936fa325bbccc89da7eab775dd2af6654",
-                "reference": "45995cb936fa325bbccc89da7eab775dd2af6654",
+                "url": "https://api.github.com/repos/semperton/database/zipball/aaab1d5f5bbedc0c59963d1d0aa99be4b7476c48",
+                "reference": "aaab1d5f5bbedc0c59963d1d0aa99be4b7476c48",
                 "shasum": ""
             },
             "require": {
@@ -41,12 +41,12 @@
             "license": [
                 "MIT"
             ],
-            "description": "A compact PDO wrapper library.",
+            "description": "A compact PDO / SQLite wrapper library.",
             "support": {
                 "issues": "https://github.com/semperton/database/issues",
                 "source": "https://github.com/semperton/database/tree/main"
             },
-            "time": "2022-06-09T15:58:53+00:00"
+            "time": "2022-06-10T10:21:42+00:00"
         },
         {
             "name": "semperton/query",
@@ -94,12 +94,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/semperton/search.git",
-                "reference": "2429bcb85285121875b427b8e00a35d8be125bfa"
+                "reference": "a3bb0962b6a5436a7b582f67d23a060acf824443"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/semperton/search/zipball/2429bcb85285121875b427b8e00a35d8be125bfa",
-                "reference": "2429bcb85285121875b427b8e00a35d8be125bfa",
+                "url": "https://api.github.com/repos/semperton/search/zipball/a3bb0962b6a5436a7b582f67d23a060acf824443",
+                "reference": "a3bb0962b6a5436a7b582f67d23a060acf824443",
                 "shasum": ""
             },
             "require": {
@@ -131,7 +131,7 @@
                 "issues": "https://github.com/semperton/search/issues",
                 "source": "https://github.com/semperton/search/tree/main"
             },
-            "time": "2022-06-08T09:27:17+00:00"
+            "time": "2022-06-13T16:34:03+00:00"
         }
     ],
     "packages-dev": [
@@ -3799,8 +3799,7 @@
     "platform": {
         "php": ">=7.4",
         "ext-json": "*",
-        "ext-pdo": "*",
-        "ext-pdo_sqlite": "*"
+        "ext-sqlite3": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.2.0"
