@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Semperton\Storage;
 
+use InvalidArgumentException;
 use Semperton\Database\ConnectionInterface;
 use Semperton\Database\ResultSetInterface;
 use Semperton\Query\QueryFactory;
@@ -171,15 +172,17 @@ final class Collection implements CollectionInterface
 	public function find(Criteria $criteria): ObjectResult
 	{
 		$result = $this->search($criteria);
+		$aggregations = $this->fetchAggregations($criteria);
 
-		return new ObjectResult($criteria, $result);
+		return new ObjectResult($criteria, $result, $aggregations);
 	}
 
 	public function findRaw(Criteria $criteria): StringResult
 	{
 		$result = $this->search($criteria);
+		$aggregations = $this->fetchAggregations($criteria);
 
-		return new StringResult($criteria, $result);
+		return new StringResult($criteria, $result, $aggregations);
 	}
 
 	protected function search(Criteria $criteria): ResultSetInterface
@@ -191,6 +194,47 @@ final class Collection implements CollectionInterface
 		$sql = $query->compile($params);
 
 		return $this->connection->fetchResult($sql, $params);
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	protected function fetchAggregations(Criteria $criteria): array
+	{
+		if (!$criteria->hasAggregations()) {
+			return [];
+		}
+
+		$fields = $this->buildAggregationFields($criteria);
+
+		$query = $this->buildSearchQuery($criteria)->from($this->name)->fields($fields);
+
+		$sql = $query->compile($params);
+
+		$result = $this->connection->fetchRow($sql, $params);
+
+		return $result ?? [];
+	}
+
+	/**
+	 * @return array<string, ExpressionInterface>
+	 */
+	protected function buildAggregationFields(Criteria $criteria): array
+	{
+		$factory = $this->queryFactory;
+
+		$aggregations = $criteria->getAggregations();
+
+		$fields = [];
+
+		foreach ($aggregations as $name => $agg) {
+
+			$expr = $this->buildFieldSelector($agg->getField());
+
+			$fields[$name] = $factory->func($agg->getType(), $expr);
+		}
+
+		return $fields;
 	}
 
 	public function findOne(int $id): ?object
@@ -286,7 +330,7 @@ final class Collection implements CollectionInterface
 
 		if ($ids) {
 			$queryFilter->and('id', 'in', $ids);
-		} else {
+		} else if ($criteria->hasFilter()) {
 			$this->addSearchFilter($queryFilter, $criteria->getFilter());
 		}
 
@@ -298,6 +342,7 @@ final class Collection implements CollectionInterface
 		$factory = $this->queryFactory;
 		$query = new SelectQuery($factory);
 
+		// TODO: source this out
 		$queryFilter = $this->buildQueryFilter($criteria);
 
 		// check if filter is valid
@@ -314,14 +359,7 @@ final class Collection implements CollectionInterface
 		$sorting = $criteria->getSorting();
 		foreach ($sorting as $field => $order) {
 
-			// check for system fields
-			// TODO: check if field is valid
-			if ($field[0] === '_') {
-
-				$expr = substr($field, 1);
-			} else {
-				$expr = $query->func('json_extract', $query->ident('data'), "\$.$field");
-			}
+			$expr = $this->buildFieldSelector($field);
 
 			if ($order === $criteria::SORT_DESC) {
 				$query->orderDesc($expr);
@@ -331,6 +369,24 @@ final class Collection implements CollectionInterface
 		}
 
 		return $query;
+	}
+
+	protected function buildFieldSelector(string $field): ExpressionInterface
+	{
+		if ($field === '') {
+			throw new InvalidArgumentException('Field selector cannot be empty');
+		}
+
+		$factory = $this->queryFactory;
+
+		// check for system field
+		// TODO: check if field is valid
+		if ($field[0] === '_') {
+			$field = substr($field, 1);
+			return $factory->ident($field);
+		}
+
+		return $factory->func('json_extract', $factory->ident('data'), "\$.$field");
 	}
 
 	protected function addSearchFilter(QueryFilter $queryFilter, SearchFilter $searchFilter): void
@@ -356,16 +412,7 @@ final class Collection implements CollectionInterface
 			}
 
 			// condition
-			$field = $entry->getField();
-
-			// check for system field
-			// TODO: check if field is valid
-			if ($field !== '' && $field[0] === '_') {
-				$field = substr($field, 1);
-			} else {
-
-				$field = $factory->func('json_extract', $factory->ident('data'), "\$.$field");
-			}
+			$field = $this->buildFieldSelector($entry->getField());
 
 			$queryFilter->$connect($field, $entry->getOperator(), $entry->getValue());
 		}

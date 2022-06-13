@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Semperton\Storage;
 
-use Semperton\Database\Connection;
 use Semperton\Database\ConnectionInterface;
 use Semperton\Database\SQLiteConnection;
 use Semperton\Query\QueryFactory;
@@ -23,7 +22,7 @@ abstract class Storage implements StorageInterface
 	public function __construct()
 	{
 		$this->connection = new SQLiteConnection($this->filepath);
-		$this->queryFactory = new QueryFactory();
+		$this->queryFactory = new QueryFactory(true);
 	}
 
 	// TODO: capability function
@@ -80,11 +79,10 @@ abstract class Storage implements StorageInterface
 	public function indexes(?string $collection = null): array
 	{
 		$query = $this->queryFactory->select('sqlite_master');
-		$unique = $this->queryFactory->quoteIdentifier('unique');
 		$query->fields([
 			'name',
 			'collection' => 'tbl_name',
-			$unique => $query->raw("substr(sql, 1, 13) = 'CREATE UNIQUE'")
+			'unique' => $query->raw("substr(sql, 1, 13) = 'CREATE UNIQUE'")
 		])->where('type', '=', 'index');
 
 		if ($collection !== null) {

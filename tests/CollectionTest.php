@@ -359,4 +359,38 @@ final class CollectionTest extends TestCase
 
 		$this->assertSame($data, (array)$user);
 	}
+
+	public function testAggregations(): void
+	{
+		$storage = new MemoryStorage();
+		$posts = $storage->create('posts');
+
+		$posts->insertMany([
+			[
+				'title' => 'The Storage News',
+				'number' => 22,
+				'meta' => [
+					'rating' => 3.2
+				]
+			],
+			[
+				'title' => 'New Books Avail',
+				'number' => 55,
+				'meta' => [
+					'rating' => 4.7
+				]
+			]
+		]);
+
+		$criteria = new Criteria();
+		$criteria = $criteria
+			->withAvgAggregation('avg-rating', 'meta.rating')
+			->withSumAggregation('sum-number', 'number');
+		$result = $posts->find($criteria);
+
+		// var_dump($result);
+
+		$this->assertEquals(3.95, $result->getAggregation('avg-rating'));
+		$this->assertEquals(77, $result->getAggregation('sum-number'));
+	}
 }
