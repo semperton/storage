@@ -435,4 +435,30 @@ final class CollectionTest extends TestCase
 
 		$this->assertNull($misc->extract($id, 'undefined'));
 	}
+
+	public function testRename(): void
+	{
+		$storage = new MemoryStorage();
+		$misc = $storage->create('misc');
+
+		$this->assertTrue($storage->exists('misc'));
+
+		$id = $misc->insertOne([
+			'name' => 'John',
+			'age' => 22
+		]);
+
+		$this->assertEquals(22, $misc->extract($id, 'age'));
+
+		$misc->rename('users');
+
+		$this->assertEquals('users', $misc->getName());
+
+		$this->assertTrue($storage->exists('users'));
+		$this->assertFalse($storage->exists('misc'));
+
+		$users = $storage->get('users');
+
+		$this->assertEquals('John', $users->extract($id, 'name'));
+	}
 }

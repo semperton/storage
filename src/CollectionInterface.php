@@ -10,6 +10,8 @@ use stdClass;
 
 interface CollectionInterface
 {
+	public function getName(): string;
+
 	/**
 	 * @param array<string, mixed>|stdClass|JsonSerializable $data
 	 */
@@ -56,4 +58,6 @@ interface CollectionInterface
 	 * @return array{name: string, unique: bool}[]
 	 */
 	public function indexes(): array;
+
+	public function rename(string $name): bool;
 }

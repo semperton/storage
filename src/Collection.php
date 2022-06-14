@@ -42,6 +42,11 @@ final class Collection implements CollectionInterface
 		$this->queryFactory = $queryFactory;
 	}
 
+	public function getName(): string
+	{
+		return $this->name;
+	}
+
 	public function createIndex(string $field, bool $unique = false): bool
 	{
 		$indexName = $this->queryFactory->escapeString($field);
@@ -281,6 +286,27 @@ final class Collection implements CollectionInterface
 		}
 
 		return null;
+	}
+
+	public function rename(string $name): bool
+	{
+		$factory = $this->queryFactory;
+
+		if (!$this->storage->exists($name)) {
+
+			$current = $factory->quoteIdentifier($this->name);
+			$new = $factory->quoteIdentifier($name);
+
+			$sql = 'alter table ' . $current . ' rename to ' . $new;
+
+			if ($this->connection->execute($sql)) {
+
+				$this->name = $name;
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	protected function buildSearchFields(Criteria $criteria): ExpressionInterface
