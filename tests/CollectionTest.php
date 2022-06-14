@@ -409,4 +409,30 @@ final class CollectionTest extends TestCase
 
 		$this->assertSame([], $users->indexes());
 	}
+
+	public function testExtract(): void
+	{
+		$storage = new MemoryStorage();
+		$misc = $storage->create('misc');
+
+		$id = $misc->insertOne([
+			'int' => 2,
+			'float' => 3.2,
+			'string' => 'Hello',
+			'bool' => false,
+			'null' => null,
+			'object' => ['key' => 'value'],
+			'array' => [1, 2, 3]
+		]);
+
+		$this->assertIsInt($misc->extract($id, 'int'));
+		$this->assertIsFloat($misc->extract($id, 'float'));
+		$this->assertIsString($misc->extract($id, 'string'));
+		$this->assertIsBool($misc->extract($id, 'bool'));
+		$this->assertNull($misc->extract($id, 'null'));
+		$this->assertIsObject($misc->extract($id, 'object'));
+		$this->assertIsArray($misc->extract($id, 'array'));
+
+		$this->assertNull($misc->extract($id, 'undefined'));
+	}
 }

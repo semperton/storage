@@ -34,11 +34,10 @@ trait TransformTrait
 	}
 
 	/**
-	 * Converts a SQLite JSON1 extension type to the appropriate PHP value
-	 * https://www.sqlite.org/json1.html#the_json_type_function
+	 * @param mixed $value
 	 * @return null|scalar|array|stdClass
 	 */
-	protected function convertJsonValue(string $value, string $type)
+	protected function convertJsonValue($value, string $type)
 	{
 		switch ($type) {
 			case 'null':
@@ -57,12 +56,12 @@ trait TransformTrait
 				$value = (float)$value;
 				break;
 			case 'text':
-				// $value = (string)$value;
+				$value = (string)$value;
 				break;
 			case 'array':
 			case 'object':
 				/** @var array|stdClass */
-				$value = $this->decode($value);
+				$value = $this->decode((string)$value);
 				break;
 			default:
 				throw new InvalidArgumentException("< $type > is not a valid JSON1 type");

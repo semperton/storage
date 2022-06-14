@@ -275,12 +275,12 @@ final class Collection implements CollectionInterface
 
 		$result = $this->connection->fetchRow($sql, $params);
 
-		if ($result !== null) {
+		if ($result !== null && isset($result['value'])) {
 
-			$result = $this->convertJsonValue((string)$result['value'], (string)$result['type']);
+			return $this->convertJsonValue($result['value'], (string)$result['type']);
 		}
 
-		return $result;
+		return null;
 	}
 
 	protected function buildSearchFields(Criteria $criteria): ExpressionInterface
