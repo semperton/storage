@@ -115,9 +115,7 @@ final class Collection implements CollectionInterface
 			$json = $this->encode($obj);
 			$result = $this->connection->execute($sql, ['data' => $json]);
 
-			if ($result) {
-				$ids[] = $this->connection->lastInsertId();
-			}
+			$ids[] = $result ? $this->connection->lastInsertId() : 0;
 		}
 
 		$this->connection->commit();
