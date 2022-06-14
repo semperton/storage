@@ -69,9 +69,10 @@ final class Collection implements CollectionInterface
 	public function indexes(): array
 	{
 		$query = $this->queryFactory->select('sqlite_master');
+		$unique = $this->queryFactory->quoteIdentifier('unique');
 		$query->fields([
 			'name',
-			'unique' => $query->raw("substr(sql, 1, 13) = 'CREATE UNIQUE'")
+			$unique => $query->raw("substr(sql, 1, 13) = 'CREATE UNIQUE'")
 		])->where('type', '=', 'index')->where('tbl_name', '=', $this->name);
 
 		$sql = $query->compile($params);
@@ -240,6 +241,7 @@ final class Collection implements CollectionInterface
 		foreach ($aggregations as $name => $agg) {
 
 			$expr = $this->buildFieldSelector($agg->getField());
+			$name = $factory->quoteIdentifier($name);
 
 			$fields[$name] = $factory->func($agg->getType(), $expr);
 		}

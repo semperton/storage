@@ -11,7 +11,7 @@ use Semperton\Query\QueryFactory;
 abstract class Storage implements StorageInterface
 {
 	/** @var string */
-	protected $filepath = ':memory:';
+	protected $filepath = '';
 
 	/** @var ConnectionInterface */
 	protected $connection;
@@ -22,7 +22,7 @@ abstract class Storage implements StorageInterface
 	public function __construct()
 	{
 		$this->connection = new SQLiteConnection($this->filepath);
-		$this->queryFactory = new QueryFactory(true);
+		$this->queryFactory = new QueryFactory(false);
 	}
 
 	// TODO: capability function
