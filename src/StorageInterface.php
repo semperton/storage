@@ -18,9 +18,4 @@ interface StorageInterface
 	 * @return string[]
 	 */
 	public function collections(): array;
-
-	/**
-	 * @return array{name: string, collection: string, unique: bool}[]
-	 */
-	public function indexes(?string $collection = null): array;
 }

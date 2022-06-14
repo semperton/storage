@@ -62,13 +62,12 @@ final class StorageTest extends TestCase
 	public function testCreate(): void
 	{
 		$storage = new MemoryStorage();
-		$valid = $storage->create('user')->valid();
 
-		$this->assertTrue($valid);
+		$this->assertFalse($storage->exists('user'));
 
-		$exists = $storage->exists('user');
+		$storage->create('user');
 
-		$this->assertTrue($exists);
+		$this->assertTrue($storage->exists('user'));
 	}
 
 	public function testGet(): void
@@ -79,13 +78,7 @@ final class StorageTest extends TestCase
 
 		$this->assertInstanceOf(CollectionInterface::class, $user);
 
-		$this->assertFalse($user->valid());
-
-		$storage->create('user');
-
-		$user = $storage->get('user');
-
-		$this->assertTrue($user->valid());
+		$this->assertFalse($storage->exists('user'));
 	}
 
 	public function testExists(): void
@@ -103,13 +96,13 @@ final class StorageTest extends TestCase
 	{
 		$storage = new MemoryStorage();
 
-		$user = $storage->create('user');
+		$storage->create('user');
 
-		$this->assertTrue($user->valid());
+		$this->assertTrue($storage->exists('user'));
 
 		$storage->delete('user');
 
-		$this->assertFalse($user->valid());
+		$this->assertFalse($storage->exists('user'));
 	}
 
 	public function testAttachStorage(): void
@@ -152,30 +145,5 @@ final class StorageTest extends TestCase
 		$collections = $storage->collections();
 
 		$this->assertSame(['user', 'post'], $collections);
-	}
-
-	public function testIndexes(): void
-	{
-		$storage = new MemoryStorage();
-		$users = $storage->create('user');
-		$users->createIndex('username464648', true);
-		$users->createIndex('testIndex');
-
-		$indexes = $storage->indexes('user');
-
-		$expected = [
-			[
-				'name' => 'username464648',
-				'collection' => 'user',
-				'unique' => true
-			],
-			[
-				'name' => 'testIndex',
-				'collection' => 'user',
-				'unique' => false
-			]
-		];
-
-		$this->assertSame($expected, $indexes);
 	}
 }

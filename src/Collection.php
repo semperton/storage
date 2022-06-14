@@ -42,11 +42,6 @@ final class Collection implements CollectionInterface
 		$this->queryFactory = $queryFactory;
 	}
 
-	public function valid(): bool
-	{
-		return $this->storage->exists($this->name);
-	}
-
 	public function createIndex(string $field, bool $unique = false): bool
 	{
 		$indexName = $this->queryFactory->escapeString($field);
@@ -73,7 +68,22 @@ final class Collection implements CollectionInterface
 
 	public function indexes(): array
 	{
-		return $this->storage->indexes($this->name);
+		$query = $this->queryFactory->select('sqlite_master');
+		$query->fields([
+			'name',
+			'unique' => $query->raw("substr(sql, 1, 13) = 'CREATE UNIQUE'")
+		])->where('type', '=', 'index')->where('tbl_name', '=', $this->name);
+
+		$sql = $query->compile($params);
+
+		$result = $this->connection->fetchResult($sql, $params)->toArray();
+
+		foreach ($result as &$entry) {
+			$entry['unique'] = (bool)$entry['unique'];
+		}
+
+		/** @var array{name: string, unique: bool}[] */
+		return $result;
 	}
 
 	public function insert($data): int

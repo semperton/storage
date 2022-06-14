@@ -75,29 +75,4 @@ abstract class Storage implements StorageInterface
 		/** @var string[] */
 		return array_column($result, 'name');
 	}
-
-	public function indexes(?string $collection = null): array
-	{
-		$query = $this->queryFactory->select('sqlite_master');
-		$query->fields([
-			'name',
-			'collection' => 'tbl_name',
-			'unique' => $query->raw("substr(sql, 1, 13) = 'CREATE UNIQUE'")
-		])->where('type', '=', 'index');
-
-		if ($collection !== null) {
-			$query->where('tbl_name', '=', $collection);
-		}
-
-		$sql = $query->compile($params);
-
-		$result = $this->connection->fetchResult($sql, $params)->toArray();
-
-		foreach ($result as &$entry) {
-			$entry['unique'] = (bool)$entry['unique'];
-		}
-
-		/** @var array{name: string, collection: string, unique: bool}[] */
-		return $result;
-	}
 }

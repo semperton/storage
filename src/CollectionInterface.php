@@ -10,8 +10,6 @@ use stdClass;
 
 interface CollectionInterface
 {
-	public function valid(): bool;
-
 	/**
 	 * @param array<string, mixed>|stdClass|JsonSerializable $data
 	 */
@@ -55,7 +53,7 @@ interface CollectionInterface
 	public function removeIndex(string $field): bool;
 
 	/**
-	 * @return array{name: string, collection: string, unique: bool}[]
+	 * @return array{name: string, unique: bool}[]
 	 */
 	public function indexes(): array;
 }

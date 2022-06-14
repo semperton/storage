@@ -8,18 +8,6 @@ use Semperton\Search\Criteria;
 
 final class CollectionTest extends TestCase
 {
-	public function testValid(): void
-	{
-		$storage = new MemoryStorage();
-		$collection = $storage->get('users');
-
-		$this->assertFalse($collection->valid());
-
-		$collection = $storage->create('users');
-
-		$this->assertTrue($collection->valid());
-	}
-
 	public function testInsert(): void
 	{
 		$storage = new MemoryStorage();
@@ -392,5 +380,28 @@ final class CollectionTest extends TestCase
 
 		$this->assertEquals(3.95, $result->getAggregation('avg-rating'));
 		$this->assertEquals(77, $result->getAggregation('sum-number'));
+	}
+
+	public function testIndexes(): void
+	{
+		$storage = new MemoryStorage();
+		$users = $storage->create('user');
+		$users->createIndex('username464648', true);
+		$users->createIndex('testIndex');
+
+		$indexes = $users->indexes();
+
+		$expected = [
+			[
+				'name' => 'username464648',
+				'unique' => true
+			],
+			[
+				'name' => 'testIndex',
+				'unique' => false
+			]
+		];
+
+		$this->assertSame($expected, $indexes);
 	}
 }
