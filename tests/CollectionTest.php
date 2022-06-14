@@ -386,22 +386,27 @@ final class CollectionTest extends TestCase
 	{
 		$storage = new MemoryStorage();
 		$users = $storage->create('user');
-		$users->createIndex('username464648', true);
-		$users->createIndex('testIndex');
+		$users->createIndex('meta.number', true);
+		$users->createIndex('lastname');
 
 		$indexes = $users->indexes();
 
 		$expected = [
 			[
-				'name' => 'username464648',
+				'name' => 'meta.number',
 				'unique' => true
 			],
 			[
-				'name' => 'testIndex',
+				'name' => 'lastname',
 				'unique' => false
 			]
 		];
 
 		$this->assertSame($expected, $indexes);
+
+		$users->dropIndex('meta.number');
+		$users->dropIndex('lastname');
+
+		$this->assertSame([], $users->indexes());
 	}
 }

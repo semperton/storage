@@ -50,7 +50,7 @@ interface CollectionInterface
 
 	public function createIndex(string $field, bool $unique = false): bool;
 
-	public function removeIndex(string $field): bool;
+	public function dropIndex(string $field): bool;
 
 	/**
 	 * @return array{name: string, unique: bool}[]

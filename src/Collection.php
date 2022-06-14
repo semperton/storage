@@ -58,7 +58,7 @@ final class Collection implements CollectionInterface
 		return $result;
 	}
 
-	public function removeIndex(string $field): bool
+	public function dropIndex(string $field): bool
 	{
 		$indexName = $this->queryFactory->escapeString($field);
 		$result = $this->connection->execute("drop index if exists '$indexName'");
