@@ -13,7 +13,7 @@ final class CollectionTest extends TestCase
 		$storage = new MemoryStorage();
 		$users = $storage->create('users');
 
-		$id = $users->insert((object)[
+		$id = $users->insertOne([
 			'name' => 'John'
 		]);
 
@@ -29,9 +29,9 @@ final class CollectionTest extends TestCase
 		$users = $storage->create('users');
 
 		$ids = $users->insertMany([
-			(object)['name' => 'John'],
-			(object)['name' => 'Jane'],
-			(object)['name' => 'Luke']
+			['name' => 'John'],
+			['name' => 'Jane'],
+			['name' => 'Luke']
 		]);
 
 		$this->assertSame([1, 2, 3], $ids);
@@ -47,7 +47,7 @@ final class CollectionTest extends TestCase
 
 		$this->assertNull($users->extract(1, 'name'));
 
-		$id = $users->insert((object)['name' => 'Kate']);
+		$id = $users->insertOne(['name' => 'Kate']);
 
 		$name = $users->extract($id, 'name');
 		$this->assertEquals('Kate', $name);
@@ -62,7 +62,7 @@ final class CollectionTest extends TestCase
 
 		$this->assertNull($user);
 
-		$id = $users->insert((object)['name' => 'John']);
+		$id = $users->insertOne(['name' => 'John']);
 
 		$user = $users->find(new Criteria($id))->first();
 
@@ -76,11 +76,11 @@ final class CollectionTest extends TestCase
 		$collection = $storage->create('users');
 
 		$collection->insertMany([
-			(object)[
+			[
 				'name' => 'John',
 				'age' => 22,
 			],
-			(object)[
+			[
 				'name' => 'Jane',
 				'age' => 18,
 			]
@@ -106,7 +106,7 @@ final class CollectionTest extends TestCase
 		$storage = new MemoryStorage();
 		$users = $storage->create('users');
 
-		$id = $users->insert((object)[
+		$id = $users->insertOne([
 			'name' => 'John',
 			'age' => 26
 		]);
@@ -114,7 +114,7 @@ final class CollectionTest extends TestCase
 		$age = $users->extract($id, 'age');
 		$this->assertEquals(26, $age);
 
-		$status = $users->update(new Criteria($id), (object)['age' => 30]);
+		$status = $users->update(new Criteria($id), ['age' => 30]);
 		$this->assertEquals(1, $status);
 
 		$age = $users->extract($id, 'age');
@@ -130,7 +130,7 @@ final class CollectionTest extends TestCase
 		$storage = new MemoryStorage();
 		$collection = $storage->create('data');
 
-		$id = $collection->insert((object)[
+		$id = $collection->insertOne([
 			'number' => 22
 		]);
 
@@ -138,7 +138,7 @@ final class CollectionTest extends TestCase
 
 		$this->assertEquals(22, $number);
 
-		$collection->update(new Criteria($id), (object)[
+		$collection->update(new Criteria($id), [
 			'number' => 33
 		]);
 
@@ -152,7 +152,7 @@ final class CollectionTest extends TestCase
 		$storage = new MemoryStorage();
 		$collection = $storage->create('data');
 
-		$id = $collection->insert((object)[
+		$id = $collection->insertOne([
 			'number' => 22
 		]);
 
@@ -173,7 +173,7 @@ final class CollectionTest extends TestCase
 		$storage = new MemoryStorage();
 		$collection = $storage->create('data');
 
-		$id = $collection->insert((object)[
+		$id = $collection->insertOne([
 			'number' => 22
 		]);
 
@@ -200,7 +200,7 @@ final class CollectionTest extends TestCase
 
 		$this->assertTrue($res);
 
-		$id = $collection->insert((object)[
+		$id = $collection->insertOne([
 			'user' => [
 				'name' => 'John',
 				'age' => 22
@@ -209,7 +209,7 @@ final class CollectionTest extends TestCase
 
 		$this->assertEquals(1, $id);
 
-		$id2 = $collection->insert((object)[
+		$id2 = $collection->insertOne([
 			'user' => [
 				'name' => 'John'
 			]
@@ -228,23 +228,23 @@ final class CollectionTest extends TestCase
 		$comments = $storage->create('comments');
 
 		$posts->insertMany([
-			(object)[
+			[
 				'title' => 'The Storage News',
 				'number' => 22
 			],
-			(object)[
+			[
 				'title' => 'New Books Avail',
 				'number' => 55
 			]
 		]);
 
 		$comments->insertMany([
-			(object)[
+			[
 				'posts_id' => 1,
 				'title' => 'Good job',
 				'content' => ''
 			],
-			(object)[
+			[
 				'posts_id' => 1,
 				'title' => 'Nice read',
 				'content' => ''
@@ -268,7 +268,7 @@ final class CollectionTest extends TestCase
 		$storage = new MemoryStorage();
 		$posts = $storage->create('posts');
 
-		$id = $posts->insert([
+		$id = $posts->insertOne([
 			'title' => 'New Post',
 			'views' => 22
 		]);
@@ -298,7 +298,7 @@ final class CollectionTest extends TestCase
 			'new' => true,
 		];
 
-		$id = $posts->insert($data);
+		$id = $posts->insertOne($data);
 		$data['_id'] = $id;
 
 		$this->assertIsFloat($posts->extract($id, 'rating'));
@@ -329,7 +329,7 @@ final class CollectionTest extends TestCase
 			'age' => null
 		];
 
-		$id = $posts->insert($data);
+		$id = $posts->insertOne($data);
 		$data['_id'] = $id;
 
 		$criteria = new Criteria();

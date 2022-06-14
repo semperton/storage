@@ -86,7 +86,7 @@ final class Collection implements CollectionInterface
 		return $result;
 	}
 
-	public function insert($data): int
+	public function insertOne($data): int
 	{
 		$query = $this->queryFactory->insert($this->name);
 		$value = $query->func('json', $this->encode($data));

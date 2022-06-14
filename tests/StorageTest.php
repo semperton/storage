@@ -19,7 +19,7 @@ final class StorageTest extends TestCase
 		];
 
 		$collection = $storage->create('users');
-		$id = $collection->insert((object)$obj);
+		$id = $collection->insertOne($obj);
 
 		$criteria = new Criteria();
 		$criteria->getFilter()->equals('_id', $id);
@@ -46,7 +46,7 @@ final class StorageTest extends TestCase
 			'label' => 'Documents'
 		];
 
-		$id = $collection->insert((object)$obj);
+		$id = $collection->insertOne($obj);
 
 		$data = (array)$collection->find(new Criteria($id))->first();
 		$obj['_id'] = 1;
@@ -117,7 +117,7 @@ final class StorageTest extends TestCase
 			'username' => 'John'
 		];
 
-		$id = $storage2->create('user')->insert($data);
+		$id = $storage2->create('user')->insertOne($data);
 
 		$data['_id'] = $id;
 

@@ -13,7 +13,7 @@ interface CollectionInterface
 	/**
 	 * @param array<string, mixed>|stdClass|JsonSerializable $data
 	 */
-	public function insert($data): int;
+	public function insertOne($data): int;
 
 	/**
 	 * @param iterable<array-key, array<string, mixed>|stdClass|JsonSerializable> $data
