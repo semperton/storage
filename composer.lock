@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/semperton/database.git",
-                "reference": "585d97a3a903f358f9c77fffbcf168f2fb8ecc3d"
+                "reference": "6d96ab02d87986674509f458149d53a4dccad0b0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/semperton/database/zipball/585d97a3a903f358f9c77fffbcf168f2fb8ecc3d",
-                "reference": "585d97a3a903f358f9c77fffbcf168f2fb8ecc3d",
+                "url": "https://api.github.com/repos/semperton/database/zipball/6d96ab02d87986674509f458149d53a4dccad0b0",
+                "reference": "6d96ab02d87986674509f458149d53a4dccad0b0",
                 "shasum": ""
             },
             "require": {
@@ -46,7 +46,7 @@
                 "issues": "https://github.com/semperton/database/issues",
                 "source": "https://github.com/semperton/database/tree/main"
             },
-            "time": "2022-06-15T07:51:40+00:00"
+            "time": "2022-06-15T15:30:12+00:00"
         },
         {
             "name": "semperton/query",

@@ -1,6 +1,6 @@
 {
     "name": "semperton/storage",
-    "description": "SQLite JSON document storage library.",
+    "description": "JSON Document Storage powered by SQLite.",
     "type": "library",
     "license": "MIT",
     "scripts": {
