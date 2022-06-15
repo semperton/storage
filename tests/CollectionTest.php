@@ -487,4 +487,23 @@ final class CollectionTest extends TestCase
 
 		$this->assertSame($new, (array)$users->findOne($id));
 	}
+
+	public function testDistinct(): void
+	{
+		$storage = new MemoryStorage();
+		$users = $storage->create('users');
+
+		$users->insertMany([
+			['name' => 'John', 'age' => 22],
+			['name' => 'Jane', 'age' => 18],
+			['name' => 'Tom', 'age' => 31],
+			['name' => 'Tamara', 'age' => 22],
+			['name' => 'Jack', 'age' => 18]
+		]);
+
+		$criteria = (new Criteria())->withAscSort('age');
+		$result = $users->distinct('age', $criteria);
+
+		$this->assertSame([18, 22, 31], iterator_to_array($result));
+	}
 }

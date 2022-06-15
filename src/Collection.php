@@ -300,6 +300,21 @@ final class Collection implements CollectionInterface
 		return null;
 	}
 
+	public function distinct(string $field, ?Criteria $criteria = null): iterable
+	{
+		$query = $criteria ? $this->buildSearchQuery($criteria) : new SelectQuery($this->queryFactory);
+		$query->from($this->name)->distinct();
+
+		$path = '$.' . $field;
+		$value = $query->func('json_extract', $query->ident('data'), $path);
+
+		$query->fields([$value]);
+
+		$sql = $query->compile($params);
+
+		return $this->connection->fetchColumn($sql, $params);
+	}
+
 	public function rename(string $name): bool
 	{
 		$factory = $this->queryFactory;

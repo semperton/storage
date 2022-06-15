@@ -37,6 +37,11 @@ interface CollectionInterface
 	public function extract(int $id, string $field);
 
 	/**
+	 * @return iterable<array-key, mixed>
+	 */
+	public function distinct(string $field, ?Criteria $criteria = null): iterable;
+
+	/**
 	 * @param array<string, mixed>|stdClass|JsonSerializable $data
 	 */
 	public function update(Criteria $criteria, $data): int;
