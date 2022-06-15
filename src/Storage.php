@@ -70,9 +70,9 @@ abstract class Storage implements StorageInterface
 
 		$sql = $query->compile($params);
 
-		$result = $this->connection->fetchResult($sql, $params)->toArray();
+		$result = $this->connection->fetchColumn($sql, $params);
 
 		/** @var string[] */
-		return array_column($result, 'name');
+		return iterator_to_array($result);
 	}
 }

@@ -10,9 +10,9 @@ final class StringResult extends Result
 {
 	public function current()
 	{
-		/** @var null|array<string, string> */
+		/** @var null|string */
 		$current = $this->iterator->current();
 
-		return $current ? $current['json'] : null;
+		return $current;
 	}
 }

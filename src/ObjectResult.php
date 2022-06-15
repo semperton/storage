@@ -12,9 +12,9 @@ final class ObjectResult extends Result
 
 	public function current()
 	{
-		/** @var null|array<string, string> */
+		/** @var null|string */
 		$current = $this->iterator->current();
 
-		return $current ? $this->decode($current['json']) : null;
+		return $current ? $this->decode($current) : null;
 	}
 }

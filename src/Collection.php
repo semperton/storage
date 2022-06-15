@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Semperton\Storage;
 
+use Generator;
 use InvalidArgumentException;
 use Semperton\Database\ConnectionInterface;
-use Semperton\Database\ResultSetInterface;
 use Semperton\Query\QueryFactory;
 use Semperton\Search\Criteria;
 use Semperton\Query\Expression\Filter as QueryFilter;
@@ -211,15 +211,15 @@ final class Collection implements CollectionInterface
 		return new StringResult($criteria, $result, $aggregations);
 	}
 
-	protected function search(Criteria $criteria): ResultSetInterface
+	protected function search(Criteria $criteria): Generator
 	{
 		$fields = $this->buildSearchFields($criteria);
 
-		$query = $this->buildSearchQuery($criteria)->from($this->name)->fields(['json' => $fields]);
+		$query = $this->buildSearchQuery($criteria)->from($this->name)->fields([$fields]);
 
 		$sql = $query->compile($params);
 
-		return $this->connection->fetchResult($sql, $params);
+		return $this->connection->fetchColumn($sql, $params);
 	}
 
 	/**
