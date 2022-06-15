@@ -157,6 +157,18 @@ final class Collection implements CollectionInterface
 		return $result > 0;
 	}
 
+	public function replaceOne(int $id, $data): bool
+	{
+		$query = $this->queryFactory->update($this->name);
+		$value = $query->func('json', $this->encode($data));
+
+		$query->set('data', $value)->where('id', '=', $id);
+
+		$sql = $query->compile($params);
+
+		return $this->connection->execute($sql, $params);
+	}
+
 	public function delete(Criteria $criteria): int
 	{
 		$queryFilter = $this->buildQueryFilter($criteria);

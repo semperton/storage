@@ -461,4 +461,30 @@ final class CollectionTest extends TestCase
 
 		$this->assertEquals('John', $users->extract($id, 'name'));
 	}
+
+	public function testReplace(): void
+	{
+		$storage = new MemoryStorage();
+		$users = $storage->create('users');
+
+		$data = [
+			'name' => 'John',
+			'age' => 22
+		];
+
+		$id = $users->insertOne($data);
+		$data['_id'] = $id;
+
+		$this->assertSame($data, (array)$users->findOne($id));
+
+		$new = [
+			'name' => 'Jane'
+		];
+
+		$users->replaceOne($id, $new);
+
+		$new['_id'] = $id;
+
+		$this->assertSame($new, (array)$users->findOne($id));
+	}
 }

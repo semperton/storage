@@ -46,6 +46,11 @@ interface CollectionInterface
 	 */
 	public function updateOne(int $id, $data): bool;
 
+	/**
+	 * @param array<string, mixed>|stdClass|JsonSerializable $data
+	 */
+	public function replaceOne(int $id, $data): bool;
+
 	public function delete(Criteria $criteria): int;
 
 	public function deleteOne(int $id): bool;
