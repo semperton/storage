@@ -94,12 +94,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/semperton/search.git",
-                "reference": "a3bb0962b6a5436a7b582f67d23a060acf824443"
+                "reference": "82034fcfc55f7331a66f052286a470b726510b07"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/semperton/search/zipball/a3bb0962b6a5436a7b582f67d23a060acf824443",
-                "reference": "a3bb0962b6a5436a7b582f67d23a060acf824443",
+                "url": "https://api.github.com/repos/semperton/search/zipball/82034fcfc55f7331a66f052286a470b726510b07",
+                "reference": "82034fcfc55f7331a66f052286a470b726510b07",
                 "shasum": ""
             },
             "require": {
@@ -131,7 +131,7 @@
                 "issues": "https://github.com/semperton/search/issues",
                 "source": "https://github.com/semperton/search/tree/main"
             },
-            "time": "2022-06-13T16:34:03+00:00"
+            "time": "2022-06-17T16:14:54+00:00"
         }
     ],
     "packages-dev": [

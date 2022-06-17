@@ -252,9 +252,9 @@ final class CollectionTest extends TestCase
 		]);
 
 		$criteria = new Criteria(1);
-		$criteria = $criteria->withField('title');
+		$criteria = $criteria->withFields(['title']);
 
-		$criteria = $criteria->withAssociation('comments', (new Criteria())->withField('title'));
+		$criteria = $criteria->withAssociation('comments', (new Criteria())->withFields(['title']));
 
 		$data = $posts->find($criteria)->toArray();
 
@@ -505,5 +505,28 @@ final class CollectionTest extends TestCase
 		$result = $users->distinct('age', $criteria);
 
 		$this->assertSame([18, 22, 31], iterator_to_array($result));
+	}
+
+	public function testFields(): void
+	{
+		$storage = new MemoryStorage();
+		$misc = $storage->create('misc');
+
+		$id = $misc->insertOne([
+			'firstname' => 'John',
+			'lastname' => 'Doe',
+			'age' => 22,
+			'numbers' => [1, 2, 3],
+			'rating' => 3.2,
+			'id' => null
+		]);
+
+		$criteria = (new Criteria($id))->withFields(['_id' => false, 'age', 'rating']);
+		$result = $misc->find($criteria)->first();
+
+		$this->assertSame([
+			'age' => 22,
+			'rating' => 3.2,
+		], (array)$result);
 	}
 }

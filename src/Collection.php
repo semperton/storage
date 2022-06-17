@@ -342,15 +342,42 @@ final class Collection implements CollectionInterface
 
 		$column = $factory->func('decode', $factory->ident('document'));
 
-		$args = !!$fields ? ['{}'] : [$column];
+		$args = [];
 
-		foreach ($fields as $field) {
+		// id special field
+		if (!isset($fields['_id']) || $fields['_id'] === true) {
+
+			$args[] = '$._id';
+			$args[] = $factory->ident('id');
+		}
+
+		$remove = [];
+		$current = null;
+		foreach ($fields as $field => $include) {
+
+			if ($field === '_id') {
+				continue;
+			}
+
+			if ($current === null) {
+				$current = $include;
+			}
+
+			if ($current !== $include) {
+				continue;
+			}
 
 			$path = '$.' . $field;
 
-			$args[] = $path;
-			$args[] = $factory->func('json_extract', $column, $path);
+			if ($include) {
+				$args[] = $path;
+				$args[] = $factory->func('json_extract', $column, $path);
+			} else {
+				$remove[] = $path;
+			}
 		}
+
+		array_unshift($args, $current ? '{}' : $factory->func('json_remove', $column, ...$remove));
 
 		// associations
 		// we auto join on {entity}_id = {entity}.id
@@ -367,14 +394,10 @@ final class Collection implements CollectionInterface
 					->fields([$factory->func('json_group_array', $subFields)])
 					->where($conn, '=', $idIdent);
 
-				$args[] = '$.$' . $coll;
+				$args[] = '$.@' . $coll;
 				$args[] = $subSelect;
 			}
 		}
-
-		// system fields
-		$args[] = '$._id';
-		$args[] = $factory->ident('id');
 
 		$expr = $factory->func('json_set', ...$args);
 
