@@ -188,36 +188,6 @@ final class CollectionTest extends TestCase
 		$this->assertNull($data);
 	}
 
-	public function testIndex(): void
-	{
-		// UNIQUE constraint
-		$this->expectException(Exception::class);
-
-		$storage = new MemoryStorage();
-		$collection = $storage->create('users');
-
-		$res = $collection->createIndex('user.name', true);
-
-		$this->assertTrue($res);
-
-		$id = $collection->insertOne([
-			'user' => [
-				'name' => 'John',
-				'age' => 22
-			]
-		]);
-
-		$this->assertEquals(1, $id);
-
-		$id2 = $collection->insertOne([
-			'user' => [
-				'name' => 'John'
-			]
-		]);
-
-		$this->assertNull($id2);
-	}
-
 	public function testAssociations(): void
 	{
 		$this->markTestSkipped();
@@ -408,6 +378,36 @@ final class CollectionTest extends TestCase
 		$users->dropIndex('lastname');
 
 		$this->assertSame([], $users->indexes());
+	}
+
+	public function testUniqueIndex(): void
+	{
+		// UNIQUE constraint
+		$this->expectException(Exception::class);
+
+		$storage = new MemoryStorage();
+		$collection = $storage->create('users');
+
+		$res = $collection->createIndex('user.name', true);
+
+		$this->assertTrue($res);
+
+		$id = $collection->insertOne([
+			'user' => [
+				'name' => 'John',
+				'age' => 22
+			]
+		]);
+
+		$this->assertEquals(1, $id);
+
+		$id2 = $collection->insertOne([
+			'user' => [
+				'name' => 'John'
+			]
+		]);
+
+		$this->assertNull($id2);
 	}
 
 	public function testExtract(): void
