@@ -163,7 +163,10 @@ final class StorageTest extends TestCase
 		$id = $collection->insertOne($obj);
 		$obj['_id'] = $id;
 
-		$this->assertSame($obj, (array)$collection->findOne($id));
+		$criteria = (new Criteria($id))->withFields(['type', 'name', 'label']);
+		$result = $collection->find($criteria)->first();
+
+		$this->assertEqualsCanonicalizing($obj, (array)$result);
 
 		unlink($filepath);
 	}

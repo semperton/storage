@@ -16,6 +16,9 @@ abstract class Storage implements StorageInterface
 
 	protected QueryFactory $queryFactory;
 
+	/** @var array<array-key, string> */
+	protected array $cache = [];
+
 	protected int $ivLength = 0;
 
 	protected string $cipherMethod;
@@ -82,13 +85,21 @@ abstract class Storage implements StorageInterface
 
 		$iv = substr($data, 0, $this->ivLength);
 
-		return  openssl_decrypt(
+		if (isset($this->cache[$iv])) {
+			return $this->cache[$iv];
+		}
+
+		$decoded = openssl_decrypt(
 			substr($data, $this->ivLength),
 			$this->cipherMethod,
 			$this->encryptionKey,
 			OPENSSL_RAW_DATA,
 			$iv
 		);
+
+		$this->cache[$iv] = $decoded;
+
+		return $decoded;
 	}
 
 	public function get(string $collection): CollectionInterface
