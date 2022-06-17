@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Semperton\Storage;
 
 use Generator;
-use InvalidArgumentException;
 use Semperton\Database\ConnectionInterface;
 use Semperton\Query\QueryFactory;
 use Semperton\Search\Criteria;
@@ -137,7 +136,8 @@ final class Collection implements CollectionInterface
 		}
 
 		$query = $this->queryFactory->update($this->name);
-		$value = $query->func('json_patch', $query->func('decode', $query->ident('data')), $this->encode($data));
+		$column = $query->func('decode', $query->ident('data'));
+		$value = $query->func('json_patch', $column, $this->encode($data));
 
 		// SQLite support with ENABLE_UPDATE_DELETE_LIMIT
 		// $limit = $criteria->getLimit();
@@ -281,10 +281,10 @@ final class Collection implements CollectionInterface
 		$query = $this->queryFactory->select($this->name);
 
 		$path = '$.' . $field;
-		$col = $query->func('decode', $query->ident('data'));
+		$column = $query->func('decode', $query->ident('data'));
 
-		$value = $query->func('json_extract', $col, $path);
-		$type = $query->func('json_type', $col, $path);
+		$value = $query->func('json_extract', $column, $path);
+		$type = $query->func('json_type', $column, $path);
 
 		$query->fields(['value' => $value, 'type' => $type])->where('id', '=', $id)->limit(1);
 
@@ -306,7 +306,8 @@ final class Collection implements CollectionInterface
 		$query->from($this->name)->distinct();
 
 		$path = '$.' . $field;
-		$value = $query->func('json_extract', $query->func('decode', $query->ident('data')), $path);
+		$column = $query->func('decode', $query->ident('data'));
+		$value = $query->func('json_extract', $column, $path);
 
 		$query->fields([$value]);
 
@@ -343,23 +344,23 @@ final class Collection implements CollectionInterface
 		$fields = $criteria->getFields();
 		$associations = $criteria->getAssociations();
 
-		$dataIdent = $factory->func('decode', $factory->ident('data'));
+		$column = $factory->func('decode', $factory->ident('data'));
 
-		$args = !!$fields ? ['{}'] : [$dataIdent];
+		$args = !!$fields ? ['{}'] : [$column];
 
 		foreach ($fields as $field) {
 
 			$path = '$.' . $field;
 
 			$args[] = $path;
-			$args[] = $factory->func('json_extract', $dataIdent, $path);
+			$args[] = $factory->func('json_extract', $column, $path);
 		}
 
 		// associations
 		// we auto join on {entity}_id = {entity}.id
 		if ($associations) {
 
-			$conn = $factory->func('json_extract', $dataIdent, '$.' . $this->name . '_id');
+			$conn = $factory->func('json_extract', $column, '$.' . $this->name . '_id');
 			$idIdent = $factory->ident($this->name . '.id');
 
 			foreach ($associations as $coll => $crit) {
@@ -388,7 +389,6 @@ final class Collection implements CollectionInterface
 	{
 		$queryFilter = new QueryFilter($this->queryFactory);
 
-		// $ids
 		$ids = $criteria->getIds();
 
 		if ($ids) {
@@ -436,20 +436,19 @@ final class Collection implements CollectionInterface
 
 	protected function buildFieldSelector(string $field): ExpressionInterface
 	{
-		if ($field === '') {
-			throw new InvalidArgumentException('Field selector cannot be empty');
-		}
-
 		$factory = $this->queryFactory;
 
-		// check for system field
-		// TODO: check if field is valid
-		if ($field[0] === '_') {
+		// id special field
+		if ($field === '_id') {
 			$field = substr($field, 1);
 			return $factory->ident($field);
 		}
 
-		return $factory->func('json_extract', $factory->func('decode', $factory->ident('data')), "\$.$field");
+		$path = '$.' . $field;
+		$column = $factory->func('decode', $factory->ident('data'));
+		$expr = $factory->func('json_extract', $column, $path);
+
+		return $expr;
 	}
 
 	protected function addSearchFilter(QueryFilter $queryFilter, SearchFilter $searchFilter): void
