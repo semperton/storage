@@ -117,7 +117,7 @@ abstract class Storage implements StorageInterface
 	public function create(string $collection): CollectionInterface
 	{
 		$table = $this->queryFactory->quoteIdentifier($collection);
-		$sql = 'create table if not exists ' . $table . ' (id integer primary key, data blob not null)';
+		$sql = 'create table if not exists ' . $table . ' (id integer primary key, document blob not null)';
 
 		$this->connection->execute($sql);
 
