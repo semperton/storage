@@ -35,7 +35,7 @@ final class StorageTest extends TestCase
 
 	public function testFileStorage(): void
 	{
-		$filepath = __DIR__ . '/storage.db';
+		$filepath = __DIR__ . '/' . bin2hex(random_bytes(4)) . '.db';
 		$storage = new PersistentStorage($filepath);
 
 		$collection = $storage->create('misc');
@@ -107,8 +107,8 @@ final class StorageTest extends TestCase
 
 	public function testAttachStorage(): void
 	{
-		$filepath1 = __DIR__ . '/storage1.db';
-		$filepath2 = __DIR__ . '/storage2.db';
+		$filepath1 = __DIR__ . '/' . bin2hex(random_bytes(4)) . '.db';
+		$filepath2 = __DIR__ . '/' . bin2hex(random_bytes(4)) . '.db';
 
 		$storage1 = new PersistentStorage($filepath1);
 		$storage2 = new PersistentStorage($filepath2);
@@ -145,5 +145,26 @@ final class StorageTest extends TestCase
 		$collections = $storage->collections();
 
 		$this->assertSame(['user', 'post'], $collections);
+	}
+
+	public function testEncryption(): void
+	{
+		$filepath = __DIR__ . '/' . bin2hex(random_bytes(4)) . '.db';
+		$storage = new PersistentStorage($filepath, 'supersecure');
+
+		$collection = $storage->create('misc');
+
+		$obj = [
+			'type' => 'collection',
+			'name' => 'doc',
+			'label' => 'I ♥ You'
+		];
+
+		$id = $collection->insertOne($obj);
+		$obj['_id'] = $id;
+
+		$this->assertSame($obj, (array)$collection->findOne($id));
+
+		unlink($filepath);
 	}
 }

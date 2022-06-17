@@ -6,10 +6,12 @@ namespace Semperton\Storage;
 
 final class PersistentStorage extends Storage
 {
-	public function __construct(string $filepath)
-	{
-		$this->filepath = $filepath;
-		parent::__construct();
+	public function __construct(
+		string $filepath,
+		?string $encryptionKey = null,
+		string $cipherMethod = 'aes128'
+	) {
+		parent::__construct($filepath, $encryptionKey, $cipherMethod);
 	}
 
 	public function attach(string $filepath, string $alias): bool
@@ -29,7 +31,7 @@ final class PersistentStorage extends Storage
 	public function detach(string $alias): bool
 	{
 		$factory = $this->queryFactory;
-		
+
 		$query = $factory->raw('detach database :p1');
 		$query->bind('p1', $factory->quoteIdentifier($alias));
 

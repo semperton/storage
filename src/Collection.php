@@ -54,7 +54,7 @@ final class Collection implements CollectionInterface
 
 		$path = '$.' . $indexName;
 
-		$expr = "json_extract(data, '$path')";
+		$expr = "json_extract(decode(data), '$path')";
 		// $sql = 'create' . ($unique ? ' unique' : '') . " index if not exists $indexName on $tableName($expr) where $expr";
 		$sql = 'create' . ($unique ? ' unique' : '') . " index if not exists '$indexName' on $tableName($expr)";
 
@@ -95,7 +95,7 @@ final class Collection implements CollectionInterface
 	public function insertOne($data): int
 	{
 		$query = $this->queryFactory->insert($this->name);
-		$value = $query->func('json', $this->encode($data));
+		$value = $query->func('encode', $query->func('json', $this->encode($data)));
 		$query->values(['data' => $value]);
 
 		$sql = $query->compile($params);
@@ -108,7 +108,7 @@ final class Collection implements CollectionInterface
 	public function insertMany(iterable $data): array
 	{
 		$query = $this->queryFactory->insert($this->name);
-		$query->values(['data' => $query->raw('json(:data)')]);
+		$query->values(['data' => $query->raw('encode(json(:data))')]);
 
 		$sql = $query->compile();
 		$ids = [];
@@ -137,11 +137,11 @@ final class Collection implements CollectionInterface
 		}
 
 		$query = $this->queryFactory->update($this->name);
-		$value = $query->func('json_patch', $query->ident('data'), $this->encode($data));
+		$value = $query->func('json_patch', $query->func('decode', $query->ident('data')), $this->encode($data));
 
 		// SQLite support with ENABLE_UPDATE_DELETE_LIMIT
 		// $limit = $criteria->getLimit();
-		$query->set('data', $value)->where($queryFilter); // ->orderAsc('id')->limit($limit);
+		$query->set('data', $query->func('encode', $value))->where($queryFilter); // ->orderAsc('id')->limit($limit);
 
 		$sql = $query->compile($params);
 
@@ -160,7 +160,7 @@ final class Collection implements CollectionInterface
 	public function replaceOne(int $id, $data): bool
 	{
 		$query = $this->queryFactory->update($this->name);
-		$value = $query->func('json', $this->encode($data));
+		$value = $query->func('encode', $query->func('json', $this->encode($data)));
 
 		$query->set('data', $value)->where('id', '=', $id);
 
@@ -281,7 +281,7 @@ final class Collection implements CollectionInterface
 		$query = $this->queryFactory->select($this->name);
 
 		$path = '$.' . $field;
-		$col = $query->ident('data');
+		$col = $query->func('decode', $query->ident('data'));
 
 		$value = $query->func('json_extract', $col, $path);
 		$type = $query->func('json_type', $col, $path);
@@ -306,7 +306,7 @@ final class Collection implements CollectionInterface
 		$query->from($this->name)->distinct();
 
 		$path = '$.' . $field;
-		$value = $query->func('json_extract', $query->ident('data'), $path);
+		$value = $query->func('json_extract', $query->func('decode', $query->ident('data')), $path);
 
 		$query->fields([$value]);
 
@@ -343,7 +343,7 @@ final class Collection implements CollectionInterface
 		$fields = $criteria->getFields();
 		$associations = $criteria->getAssociations();
 
-		$dataIdent = $factory->ident('data');
+		$dataIdent = $factory->func('decode', $factory->ident('data'));
 
 		$args = !!$fields ? ['{}'] : [$dataIdent];
 
@@ -449,7 +449,7 @@ final class Collection implements CollectionInterface
 			return $factory->ident($field);
 		}
 
-		return $factory->func('json_extract', $factory->ident('data'), "\$.$field");
+		return $factory->func('json_extract', $factory->func('decode', $factory->ident('data')), "\$.$field");
 	}
 
 	protected function addSearchFilter(QueryFilter $queryFilter, SearchFilter $searchFilter): void

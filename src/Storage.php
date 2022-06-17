@@ -4,29 +4,91 @@ declare(strict_types=1);
 
 namespace Semperton\Storage;
 
+use InvalidArgumentException;
 use Semperton\Database\ConnectionInterface;
 use Semperton\Database\SQLiteConnection;
 use Semperton\Query\QueryFactory;
+use SQLite3;
 
 abstract class Storage implements StorageInterface
 {
-	/** @var string */
-	protected $filepath = '';
-
 	/** @var ConnectionInterface */
 	protected $connection;
 
 	/** @var QueryFactory */
 	protected $queryFactory;
 
-	public function __construct()
-	{
-		$this->connection = new SQLiteConnection($this->filepath);
-		$this->queryFactory = new QueryFactory(false);
-	}
+	/** @var int */
+	protected $ivLength = 0;
+
+	/** @var string */
+	protected $cipherMethod;
+
+	/** @var null|string */
+	private $encryptionKey;
 
 	// TODO: capability function
 	// check pragma compile_options for ENABLE_JSON1 and ENABLE_UPDATE_DELETE_LIMIT
+
+	public function __construct(
+		string $filepath,
+		?string $encryptionKey = null,
+		string $cipherMethod = 'aes128'
+	) {
+		$this->connection = new SQLiteConnection($filepath, true, function (SQLite3 $sqlite) {
+			$sqlite->createFunction('encode', [$this, 'encode'], 1);
+			$sqlite->createFunction('decode', [$this, 'decode'], 1, 2048); // SQLITE3_DETERMINISTIC
+		});
+
+		$this->queryFactory = new QueryFactory();
+
+		$this->cipherMethod = $cipherMethod;
+
+		if ($encryptionKey !== null) {
+
+			$this->encryptionKey = $encryptionKey;
+
+			if (!in_array($cipherMethod, openssl_get_cipher_methods(true))) {
+				throw new InvalidArgumentException("Cipher method < $cipherMethod > is not supported");
+			}
+
+			$this->ivLength = (int)openssl_cipher_iv_length($cipherMethod);
+		}
+	}
+
+	public function encode(string $data): string
+	{
+		if ($this->encryptionKey === null) {
+			return $data;
+		}
+
+		$iv = openssl_random_pseudo_bytes($this->ivLength);
+
+		return $iv . openssl_encrypt(
+			$data,
+			$this->cipherMethod,
+			$this->encryptionKey,
+			OPENSSL_RAW_DATA,
+			$iv
+		);
+	}
+
+	public function decode(string $data): string
+	{
+		if ($this->encryptionKey === null) {
+			return $data;
+		}
+
+		$iv = substr($data, 0, $this->ivLength);
+
+		return  openssl_decrypt(
+			substr($data, $this->ivLength),
+			$this->cipherMethod,
+			$this->encryptionKey,
+			OPENSSL_RAW_DATA,
+			$iv
+		);
+	}
 
 	public function get(string $collection): CollectionInterface
 	{
@@ -48,7 +110,7 @@ abstract class Storage implements StorageInterface
 	public function create(string $collection): CollectionInterface
 	{
 		$table = $this->queryFactory->quoteIdentifier($collection);
-		$sql = 'create table if not exists ' . $table . ' (id integer primary key, data text not null)';
+		$sql = 'create table if not exists ' . $table . ' (id integer primary key, data blob not null)';
 
 		$this->connection->execute($sql);
 
