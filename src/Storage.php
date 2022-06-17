@@ -36,6 +36,13 @@ abstract class Storage implements StorageInterface
 		string $cipherMethod = 'aes128'
 	) {
 		$this->connection = new SQLiteConnection($filepath, true, function (SQLite3 $sqlite) {
+
+			// $sqlite->exec('pragma journal_mode = wal');
+			$sqlite->exec('pragma application_id = 0x07111991');
+
+			// TODO: set database flags
+			// $sqlite->exec('pragma user_version = 1991');
+
 			$sqlite->createFunction('encode', [$this, 'encode'], 1);
 			$sqlite->createFunction('decode', [$this, 'decode'], 1, 2048); // SQLITE3_DETERMINISTIC
 		});
