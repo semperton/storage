@@ -17,17 +17,13 @@ final class Collection implements CollectionInterface
 {
 	use TransformTrait;
 
-	/** @var string */
-	protected $name;
+	protected string $name;
 
-	/** @var StorageInterface */
-	protected $storage;
+	protected StorageInterface $storage;
 
-	/** @var ConnectionInterface */
-	protected $connection;
+	protected ConnectionInterface $connection;
 
-	/** @var QueryFactory */
-	protected $queryFactory;
+	protected QueryFactory $queryFactory;
 
 	public function __construct(
 		string $name,

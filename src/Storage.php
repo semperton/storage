@@ -12,20 +12,15 @@ use SQLite3;
 
 abstract class Storage implements StorageInterface
 {
-	/** @var ConnectionInterface */
-	protected $connection;
+	protected ConnectionInterface $connection;
 
-	/** @var QueryFactory */
-	protected $queryFactory;
+	protected QueryFactory $queryFactory;
 
-	/** @var int */
-	protected $ivLength = 0;
+	protected int $ivLength = 0;
 
-	/** @var string */
-	protected $cipherMethod;
+	protected string $cipherMethod;
 
-	/** @var null|string */
-	private $encryptionKey;
+	private ?string $encryptionKey;
 
 	// TODO: capability function
 	// check pragma compile_options for ENABLE_JSON1 and ENABLE_UPDATE_DELETE_LIMIT
@@ -49,11 +44,10 @@ abstract class Storage implements StorageInterface
 
 		$this->queryFactory = new QueryFactory();
 
+		$this->encryptionKey = $encryptionKey;
 		$this->cipherMethod = $cipherMethod;
 
-		if ($encryptionKey !== null) {
-
-			$this->encryptionKey = $encryptionKey;
+		if ($this->encryptionKey !== null) {
 
 			if (!in_array($cipherMethod, openssl_get_cipher_methods(true))) {
 				throw new InvalidArgumentException("Cipher method < $cipherMethod > is not supported");
