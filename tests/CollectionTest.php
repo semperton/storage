@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
+use Semperton\Search\Aggregation;
 use Semperton\Storage\MemoryStorage;
 use Semperton\Search\Criteria;
 
@@ -342,8 +343,8 @@ final class CollectionTest extends TestCase
 
 		$criteria = new Criteria();
 		$criteria = $criteria
-			->withAvgAggregation('avg-rating', 'meta.rating')
-			->withSumAggregation('sum-number', 'number');
+			->withAggregation('avg-rating', new Aggregation(Aggregation::AVG, 'meta.rating'))
+			->withAggregation('sum-number', new Aggregation(Aggregation::SUM, 'number'));
 		$result = $posts->find($criteria);
 
 		// var_dump($result);
