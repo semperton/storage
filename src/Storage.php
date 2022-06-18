@@ -17,7 +17,7 @@ abstract class Storage implements StorageInterface
 	protected QueryFactory $queryFactory;
 
 	/** @var array<array-key, string> */
-	protected array $cache = [];
+	protected array $decryptCache = [];
 
 	protected int $ivLength = 0;
 
@@ -41,8 +41,8 @@ abstract class Storage implements StorageInterface
 			// TODO: set database flags
 			// $sqlite->exec('pragma user_version = 1991');
 
-			$sqlite->createFunction('encode', [$this, 'encode'], 1);
-			$sqlite->createFunction('decode', [$this, 'decode'], 1, 2048); // SQLITE3_DETERMINISTIC
+			$sqlite->createFunction('encrypt', [$this, 'encrypt'], 1);
+			$sqlite->createFunction('decrypt', [$this, 'decrypt'], 1, 2048); // SQLITE3_DETERMINISTIC
 		});
 
 		$this->queryFactory = new QueryFactory();
@@ -60,7 +60,7 @@ abstract class Storage implements StorageInterface
 		}
 	}
 
-	public function encode(string $data): string
+	public function encrypt(string $data): string
 	{
 		if ($this->encryptionKey === null) {
 			return $data;
@@ -77,7 +77,7 @@ abstract class Storage implements StorageInterface
 		);
 	}
 
-	public function decode(string $data): string
+	public function decrypt(string $data): string
 	{
 		if ($this->encryptionKey === null) {
 			return $data;
@@ -85,8 +85,8 @@ abstract class Storage implements StorageInterface
 
 		$iv = substr($data, 0, $this->ivLength);
 
-		if (isset($this->cache[$iv])) {
-			return $this->cache[$iv];
+		if (isset($this->decryptCache[$iv])) {
+			return $this->decryptCache[$iv];
 		}
 
 		$decoded = openssl_decrypt(
@@ -97,7 +97,7 @@ abstract class Storage implements StorageInterface
 			$iv
 		);
 
-		$this->cache[$iv] = $decoded;
+		$this->decryptCache[$iv] = $decoded;
 
 		return $decoded;
 	}
