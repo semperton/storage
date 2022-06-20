@@ -6,7 +6,7 @@ namespace Semperton\Storage;
 
 use InvalidArgumentException;
 use Semperton\Database\ConnectionInterface;
-use Semperton\Database\SQLiteConnection;
+use Semperton\Database\Connection\SQLiteConnection;
 use Semperton\Query\QueryFactory;
 use SQLite3;
 
