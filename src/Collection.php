@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Semperton\Storage;
 
 use Generator;
+use InvalidArgumentException;
 use Semperton\Database\ConnectionInterface;
 use Semperton\Query\QueryFactory;
 use Semperton\Search\Criteria;
@@ -12,11 +13,10 @@ use Semperton\Query\Expression\Filter as QueryFilter;
 use Semperton\Query\ExpressionInterface;
 use Semperton\Query\Type\SelectQuery;
 use Semperton\Search\Filter as SearchFilter;
+use stdClass;
 
 final class Collection implements CollectionInterface
 {
-	use TransformTrait;
-
 	protected string $name;
 
 	protected StorageInterface $storage;
@@ -96,7 +96,7 @@ final class Collection implements CollectionInterface
 	public function insertOne($data): int
 	{
 		$query = $this->queryFactory->insert($this->name);
-		$value = $query->func('encrypt', $query->func('json', $this->encode($data)));
+		$value = $query->func('encrypt', $query->func('json', $this->encodeDocument($data)));
 		$query->values(['document' => $value]);
 
 		$sql = $query->compile($params);
@@ -118,7 +118,7 @@ final class Collection implements CollectionInterface
 
 		foreach ($data as $obj) {
 
-			$json = $this->encode($obj);
+			$json = $this->encodeDocument($obj);
 			$result = $this->connection->execute($sql, ['data' => $json]);
 
 			$ids[] = $result ? $this->connection->lastInsertId() : 0;
@@ -139,7 +139,7 @@ final class Collection implements CollectionInterface
 
 		$query = $this->queryFactory->update($this->name);
 
-		$value = $query->func('json_patch', $this->readColumn, $this->encode($data));
+		$value = $query->func('json_patch', $this->readColumn, $this->encodeDocument($data));
 
 		// SQLite support with ENABLE_UPDATE_DELETE_LIMIT
 		// $limit = $criteria->getLimit();
@@ -162,7 +162,7 @@ final class Collection implements CollectionInterface
 	public function replaceOne(int $id, $data): bool
 	{
 		$query = $this->queryFactory->update($this->name);
-		$value = $query->func('encrypt', $query->func('json', $this->encode($data)));
+		$value = $query->func('encrypt', $query->func('json', $this->encodeDocument($data)));
 
 		$query->set('document', $value)->where('id', '=', $id);
 
@@ -499,5 +499,58 @@ final class Collection implements CollectionInterface
 
 			$queryFilter->$connect($field, $entry->getOperator(), $entry->getValue());
 		}
+	}
+
+	/**
+	 * @param mixed $data
+	 */
+	protected function encodeDocument($data): string
+	{
+		$json = encode($data);
+
+		if ($json === '' || $json[0] !== '{') {
+
+			$type = gettype($data);
+			throw new InvalidArgumentException("Data of type < $type > is not a valid JSON document");
+		}
+
+		return $json;
+	}
+
+	/**
+	 * @param mixed $value
+	 * @return null|scalar|array|stdClass
+	 */
+	protected function convertJsonValue($value, string $type)
+	{
+		switch ($type) {
+			case 'null':
+				$value = null;
+				break;
+			case 'true':
+				$value = true;
+				break;
+			case 'false':
+				$value = false;
+				break;
+			case 'integer':
+				$value = (int)$value;
+				break;
+			case 'real':
+				$value = (float)$value;
+				break;
+			case 'text':
+				$value = (string)$value;
+				break;
+			case 'array':
+			case 'object':
+				/** @var array|stdClass */
+				$value = decode((string)$value);
+				break;
+			default:
+				throw new InvalidArgumentException("< $type > is not a valid JSON1 type");
+		}
+
+		return $value;
 	}
 }
